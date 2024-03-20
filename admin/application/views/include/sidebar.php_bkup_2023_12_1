@@ -1,0 +1,292 @@
+  <?php 
+  $controller = (!empty($this->uri->segment(1))?$this->uri->segment(1):'');
+  $method = (!empty($this->uri->segment(2))?$this->uri->segment(2):'');
+  ?>
+
+  <aside class="main-sidebar">
+    <section class="sidebar">
+      <!-- Sidebar user panel -->
+      <div class="user-panel">
+        <div class="pull-left image">
+          <img src="<?php echo base_url(); ?>assets/dist/img/user2-160x160.jpg" class="img-circle" alt="User Image">
+        </div>
+        <div class="pull-left info">
+          <p>Admin</p>
+          <a href="javascript:void(0)"><i class="fa fa-circle text-success"></i> Online</a>
+        </div>
+      </div>
+
+      <ul class="sidebar-menu" data-widget="tree">
+        <li>
+          <a href="<?php echo base_url('dashboard'); ?>">
+            <i class="fa fa-dashboard"></i> <span>Dashboard</span>
+          </a>
+        </li>
+
+        <li class="treeview">
+          <ul class="treeview-menu">
+            <li class="treeview">
+            </li>
+          </ul>
+        </li>
+
+          <li class="treeview" >
+            <a href="javascript:void(0)">
+              <i class="fa fa-picture-o"></i>
+              <span>Banner Management</span>
+            </a>
+            <ul class="treeview-menu">
+              <li class="treeview">
+                <a href="javascript:void(0)">
+                  <i class="fa fa-bars"></i>
+                  <span>Home Banner</span>
+                </a>
+                <ul class="treeview-menu" <?php if(in_array($controller, array('Banner'))) { echo 'style="display:block"' ; } ?> >
+                  <li <?php if(in_array($method, array('addBanner'))) { echo 'class="active"'; } ?>>
+                    <a href="<?php echo base_url('banner/addBanner'); ?>"><i class="fa fa-circle-o text-blue"></i>Add Banner</a></li>
+                    <li <?php if(in_array($method, array('viewBannerList'))) { echo 'class="active"'; } ?>>
+                      <a href="<?php echo base_url('banner/viewBannerList'); ?>"><i class="fa fa-circle-o text-red"></i>View Banner</a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="treeview">
+                  <a href="javascript:void(0)">
+                    <i class="fa fa-bars"></i>
+                    <span>Company Promotion Banner</span>
+                  </a>
+                  <ul class="treeview-menu" <?php if(in_array($controller, array('Banner'))) { echo 'style="display:block" '; } ?> >
+                    <li <?php if(in_array($method, array('addPromotionBanner'))) { echo 'class="active"'; } ?>>
+                      <a href="<?php echo base_url('banner/addPromotionBanner'); ?>"><i class="fa fa-circle-o text-blue"></i>Add Banner</a>
+                    </li> 
+                    <li <?php if(in_array($method, array('viewPromotionBanner'))) { echo 'class="active"'; } ?>>
+                      <a href="<?php echo base_url('banner/viewPromotionBanner'); ?>"><i class="fa fa-circle-o text-red"></i>View banner</a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </li> 
+
+            <li class="treeview" >
+            <a href="javascript:void(0)">
+              <i class="fa fa-list-alt"></i>
+              <span>Category Management</span>
+            </a>
+            <ul class="treeview-menu">
+              <li class="treeview">
+                <a href="javascript:void(0)">
+                  <i class="fa fa-bars"></i>
+                  <span>Parent Category</span>
+                </a>
+                <ul class="treeview-menu" <?php if(in_array($controller, array('Category'))) { echo 'style="display:block"'; } ?> >
+                  <li <?php if(in_array($method, array('addCategory'))) { echo 'class="active"'; } ?>>
+                  <a href="<?php echo base_url('category/addCategory'); ?>"><i class="fa fa-circle-o text-blue"></i>Add Category</a></li>
+                  <li <?php if(in_array($method, array('viewCategory'))) { echo 'class="active"'; } ?>>
+                    <a href="<?php echo base_url('category/viewCategory'); ?>"><i class="fa fa-circle-o text-red"></i>View Category</a>
+                  </li>
+                  </ul>
+                </li>
+                <li class="treeview">
+                  <a href="javascript:void(0)">
+                    <i class="fa fa-bars"></i>
+                    <span>Sub Category</span>
+                  </a>
+                  <ul class="treeview-menu" <?php if(in_array($controller, array('Category'))) { echo 'style="display:block"'; } ?> >
+                    <li <?php if(in_array($method, array('addSubCategory'))) { echo 'class="active"'; } ?>>
+                    <a href="<?php echo base_url('category/addSubCategory'); ?>"><i class="fa fa-circle-o text-blue"></i>Add Sub Category</a></li>
+                    <li <?php if(in_array($method, array('viewSubCategory'))) { echo 'class="active"'; } ?>>
+                      <a href="<?php echo base_url('category/viewSubCategory'); ?>"><i class="fa fa-circle-o text-red"></i>View Sub Category</a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="treeview">
+                  <a href="javascript:void(0)">
+                    <i class="fa fa-bars"></i>
+                    <span>Micro Category</span>
+                  </a>
+                  <ul class="treeview-menu" <?php if(in_array($controller, array('Category'))) { echo 'style="display:block" '; } ?> >
+                    <li <?php if(in_array($method, array('addMicroCategory'))) { echo 'class="active"'; } ?>>
+                      <a href="<?php echo base_url('category/addMicroCategory'); ?>"><i class="fa fa-circle-o text-blue"></i>Add Micro Category</a>
+                    </li>
+                    <li <?php if(in_array($method, array('viewMinorCategory'))) { echo 'class="active"'; } ?>>
+                      <a href="<?php echo base_url('category/viewMicroCategory'); ?>"><i class="fa fa-circle-o text-red"></i>View Micro Category</a>
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  <a href="<?php echo base_url('category/allCategoryContent'); ?>"><i class="fa fa-circle-o text-red"></i>All Category Content</a>
+                </li>
+              </ul>
+            </li> 
+
+              <li class="treeview">
+                <a href="javascript:void(0)">
+                  <i class="fa fa-industry"></i>
+                  <span>Supplier Information</span>
+                </a>
+                <ul class="treeview-menu" <?php if(in_array($controller, array('supplier'))) { echo 'style="display:block"'; } ?> >
+                    <li <?php if(in_array($method, array('index'))) { echo 'class="active"'; } ?>>
+                      <a href="<?php echo base_url('supplier'); ?>"><i class="fa fa-circle-o text-red"></i>Supplier List</a>
+                    </li>
+
+                    <li <?php if(in_array($method, array('approved_supplier'))) { echo 'class="active"'; } ?>>
+                      <a href="<?php echo base_url('supplier/approved_supplier'); ?>"><i class="fa fa-circle-o text-red"></i>Approved Supplier List</a>
+                    </li>
+
+                    <li <?php if(in_array($method, array('reject_supplier'))) { echo 'class="active"'; } ?>>
+                      <a href="<?php echo base_url('supplier/reject_supplier'); ?>"><i class="fa fa-circle-o text-red"></i>Reject Supplier List</a>
+                    </li>
+
+                    <li <?php if(in_array($method, array('pending_supplier'))) { echo 'class="active"'; } ?>>
+                      <a href="<?php echo base_url('supplier/pending_supplier'); ?>"><i class="fa fa-circle-o text-red"></i>Pending Supplier List</a>
+                    </li>
+                  
+                </ul>
+              </li>
+
+              <li class="treeview">
+                <a href="javascript:void(0)">
+                  <i class="fa fa-product-hunt"></i>
+                  <span>Product Information</span>
+                </a>
+                <ul class="treeview-menu" <?php if(in_array($controller, array('product'))) { echo 'style="display:block"'; } ?> >
+                    <li <?php if(in_array($method, array('index'))) { echo 'class="active"'; } ?>>
+                      <a href="<?php echo base_url('product/approved_product_list'); ?>"><i class="fa fa-circle-o text-red"></i>Approved Product List</a>
+                    </li>
+                    <li <?php if(in_array($method, array('index'))) { echo 'class="active"'; } ?>>
+                      <a href="<?php echo base_url('product'); ?>"><i class="fa fa-circle-o text-red"></i>Pending Product List</a>
+                    </li>
+                    <li <?php if(in_array($method, array('reject_project_list'))) { echo 'class="active"'; } ?>>
+                      <a href="<?php echo base_url('product/reject_list'); ?>"><i class="fa fa-circle-o text-red"></i>Reject Product List</a>
+                    </li>
+                </ul>
+              </li> 
+
+
+              <li class="treeview">
+                <a href="javascript:void(0)">
+                  <i class="fa fa-flag"></i>
+                  <span>Country Managment</span>
+                </a>
+                <ul class="treeview-menu" <?php if(in_array($controller, array('country'))) { echo 'style="display:block"'; } ?> >
+
+                  <li <?php if(in_array($method, array('addCountry'))) { echo 'class="active"'; } ?>>
+                    <a href="<?php echo base_url('country/addCountry'); ?>"><i class="fa fa-circle-o text-blue"></i>Add Country</a></li>
+                    <li <?php if(in_array($method, array('viewCountry'))) { echo 'class="active"'; } ?>>
+                      <a href="<?php echo base_url('country/viewCountry'); ?>"><i class="fa fa-circle-o text-red"></i>View Country List</a>
+                    </li>
+                  </ul>
+                </li>  
+
+                <li class="treeview">
+                  <a href="javascript:void(0)">
+                    <i class="fa fa-building"></i>
+                    <span>State Managment</span>
+                  </a>
+                  <ul class="treeview-menu" <?php if(in_array($controller, array('state'))) { echo 'style="display:block"'; } ?> >
+
+                    <li <?php if(in_array($method, array('addState'))) { echo 'class="active"'; } ?>>
+                      <a href="<?php echo base_url('State/addState'); ?>"><i class="fa fa-circle-o text-blue"></i>Add State</a></li>
+                      <li <?php if(in_array($method, array('viewState'))) { echo 'class="active"'; } ?>>
+                        <a href="<?php echo base_url('State/viewState'); ?>"><i class="fa fa-circle-o text-red"></i>View State List</a>
+                      </li>
+                    </ul>
+                  </li> 
+
+                  <li class="treeview">
+                    <a href="javascript:void(0)">
+                      <i class="fa fa-building-o"></i>
+                      <span>City Managment</span>
+                    </a>
+                    <ul class="treeview-menu" <?php if(in_array($controller, array('city'))) { echo 'style="display:block"'; } ?> >
+
+                      <li <?php if(in_array($method, array('addCity'))) { echo 'class="active"'; } ?>>
+                        <a href="<?php echo base_url('city/addCity'); ?>"><i class="fa fa-circle-o text-blue"></i>Add City</a></li>
+                        <li <?php if(in_array($method, array('viewCity'))) { echo 'class="active"'; } ?>>
+                          <a href="<?php echo base_url('city/viewCity'); ?>"><i class="fa fa-circle-o text-red"></i>View City List</a>
+                        </li>
+                      </ul>
+                    </li>
+
+                  <li class="treeview">
+                    <a href="javascript:void(0)">
+                      <i class="fa fa-area-chart"></i>
+                      <span>Area Managment</span>
+                    </a>
+                    <ul class="treeview-menu" <?php if(in_array($controller, array('area'))) { echo 'style="display:block"'; } ?> >
+
+                      <li <?php if(in_array($method, array('addArea'))) { echo 'class ="active"'; } ?>>
+                        <a href="<?php echo base_url('area/addArea'); ?>"><i class="fa fa-circle-o text-blue"></i>Add Area</a></li>
+                        <li <?php if(in_array($method, array('area'))) { echo 'class="active"'; } ?>>
+                          <a href="<?php echo base_url('area'); ?>"><i class="fa fa-circle-o text-red"></i>View Area List</a>
+                        </li>
+                      </ul>
+                    </li>
+
+                    <li class="treeview" >
+                      <a href="javascript:void(0)">
+                        <i class="fa fa-list-alt"></i>
+                        <span>Service Management</span>
+                      </a>
+                      <ul class="treeview-menu">
+                        <li class="treeview">
+                          <a href="javascript:void(0)">
+                            <i class="fa fa-bars"></i>
+                            <span>Service Plan</span>
+                          </a>
+                          <ul class="treeview-menu" <?php if(in_array($controller, array('Service'))) { echo 'style="display:block"'; } ?> >
+                            <li <?php if(in_array($method, array('addServicePlan'))) { echo 'class="active"'; } ?>>
+                              <a href="<?php echo base_url('service/addServicePlan'); ?>"><i class="fa fa-circle-o text-blue"></i>Add Service Plan</a></li>
+                              <li <?php if(in_array($method, array('servicePlan'))) { echo 'class="active"'; } ?>>
+                                <a href="<?php echo base_url('service/servicePlan'); ?>"><i class="fa fa-circle-o text-red"></i>View Service Plan</a>
+                              </li>
+                            </ul>
+                          </li>
+                  <!--       <li class="treeview">
+                            <a href="javascript:void(0)">
+                              <i class="fa fa-bars"></i>
+                              <span>Sub Category</span>
+                            </a>
+                            <ul class="treeview-menu" <?php if(in_array($controller, array('Category'))) { echo 'style="display:block"'; } ?> >
+                              <li <?php if(in_array($method, array('addSubCategory'))) { echo 'class="active"'; } ?>>
+                                <a href="<?php echo base_url('category/addSubCategory'); ?>"><i class="fa fa-circle-o text-blue"></i>Add Sub Category</a></li>
+                                <li <?php if(in_array($method, array('viewSubCategory'))) { echo 'class="active"'; } ?>>
+                                  <a href="<?php echo base_url('category/viewSubCategory'); ?>"><i class="fa fa-circle-o text-red"></i>View Sub Category</a>
+                                </li>
+                              </ul>
+                            </li> -->
+
+                            <!-- <li>
+                              <a href="<?php echo base_url('category/allCategoryContent'); ?>"><i class="fa fa-circle-o text-red"></i>All Category Content</a>
+                            </li> -->
+                          </ul>
+                        </li> 
+
+
+                    <li class="treeview">
+                      <a href="javascript:void(0)">
+                        <i class="fa fa-info-circle"></i>
+                        <span>About Us</span>
+                      </a>
+                      <ul class="treeview-menu" <?php if(in_array($controller, array('aboutUs'))) { echo 'style="display:block"'; } ?> >
+
+                        <li <?php if(in_array($method, array('viewAboutUs'))) { echo 'class="active"'; } ?>>
+                          <a href="<?php echo base_url('aboutUs/viewAboutUs'); ?>"><i class="fa fa-circle-o text-red"></i>View How it works</a>
+                        </li>
+                      </ul>
+                    </li> 
+
+                    <li class="treeview">
+                      <a href="javascript:void(0)">
+                        <i class="fa fa-cog"></i>
+                        <span>Settings</span>
+                      </a>
+                      <ul class="treeview-menu" <?php if(in_array($method, array('editPassword'))) { echo 'style="display:block"'; } ?> >
+
+                        <li <?php if(in_array($method, array('editPassword'))) { echo 'class="active"'; } ?>>
+                          <a href="<?php echo base_url('dashboard/editPassword'); ?>"><i class="fa fa-circle-o text-blue"></i>Change Password</a></li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </section>
+                  <!-- /.sidebar -->
+                </aside>

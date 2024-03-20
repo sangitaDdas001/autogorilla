@@ -1,0 +1,396 @@
+<?php $userId_segment   = $this->uri->segment(3); 
+      $segment2         = $this->uri->segment(2); 
+      $segment4         = $this->uri->segment(4); 
+?>
+<div class="content-wrapper">
+   <!-- Content Header (Page header) -->
+   <section class="content-header">
+      <h1>
+         User Management
+      </h1>
+      <ol class="breadcrumb">
+         <li><a href="<?php echo base_url('dashboard') ?>"><i class="fa fa-dashboard"></i>Home</a></li>
+         <li class="active">User Management</li>
+      </ol>
+   </section>
+   <!-- Main content -->
+   <section class="content">
+      <div class="row">
+         <!-- left column -->
+         <div class="col-md-12">
+            <!-- general form elements -->
+            <div class="box box-primary">
+               <div class="box-header with-border">
+                  <h3 class="box-title">User Management</h3>
+               </div>
+               <?php 
+                  $userId  = base64_decode($userId_segment); 
+                  if(!empty($result)){
+                  $menu_arr = []; $submenu_arr = []; $permissionArr =[];
+                     foreach ($result as $key => $menu_value) {
+                        array_push($menu_arr, $menu_value['parent_menu_id']);
+                        array_push($submenu_arr, $menu_value['sub_menu']);
+                        
+                     }
+                  
+                  $get_sub_menu19 = getSubMenuInfo($userId_segment,19);
+                  $get_sub_menu24 = getSubMenuInfo($userId_segment,24);
+                  $get_sub_menu64 = getSubMenuInfo($userId_segment,64);
+                  } ?>
+               <?php if($segment2 == 'editUserManagement'){ 
+                  echo form_open_multipart('UserManagement/updateMenuPermission/'.$userId_segment,array('role'=>'form')); ?>
+               <?php } else { 
+                  echo form_open_multipart('UserManagement/menuPrevillageUserWise/'.$userId_segment,array('role'=>'form')); ?>
+               <?php } ?>
+                  <?php if(!empty($segment4) && $segment4 == 'salesuser'){ ?>
+                        <div class="box-body">
+                           <div class="form-group"> 
+                              <label for="">Users <span class="text-danger">*</span></label>
+                              <select name="user_id" class="form-control user_id" required="required" disabled>
+                                 <?php if(!empty($user_list)){ ?>
+                                    <option value="">--Select Users--</option>
+                                    <?php foreach ($user_list as $key => $user_value){ ?>
+                                       <option <?php if($user_value['id'] == base64_decode($userId_segment)) echo "selected"; ?>  value="<?php echo $user_value['id']; ?>" ><?php echo $user_value['name']; ?></option>
+                                    <?php } ?>
+                                 <?php } else { ?>
+                                    <option value="">No Record Found</option>
+                                 <?php } ?>   
+                             </select>
+                           </div>
+
+                           <input type="hidden" name="admin_user_id" value="<?php echo $userId; ?>">
+                           <?php if(!empty($menulist)) { if(!empty($menu_arr)){ ?>
+                              <div style="padding-left:20px">
+                                 <div class="form-check mb-3">
+                                   <input class="form-check-input mt-0 parent_menu" type="checkbox" name="user_menu[47]" value="47" id="parent_47" data-id = "47"  <?php if(in_array(47, $menu_arr)) { echo 'checked'; }  ?> >
+                                    <label class="form-che5ck-label mb-0" for="flexCheckDefault" style="margin-left: 7px;">
+                                       User Management
+                                    </label>
+                                 </div>
+
+                                 <div class="form-check mb-3">
+                                   <input class="form-check-input parent_menu_19" name="user_menu[19]" id="19" type="checkbox" value="19" data-id = "19" <?php if(in_array(19, $menu_arr)) { echo 'checked'; }  ?> ><span style="margin-left: 10px;font-weight: 700;"  >Supplier Information</span>
+                                       <ul style="padding-left: 12px; margin-top: 10px;" class="summaryCard content_hidden content_option_19 card2">
+                                          <li style="list-style:none;">
+                                             <div class="form-check mb-3">
+                                               <input class="form-check-input mt-0 slectOne" type="checkbox" id="all_1" name="user_menu[19][]" value="all_1" <?php if(in_array(19, $menu_arr) && in_array('all_1', $submenu_arr)) { echo 'checked'; }  ?> >
+                                               <label class="form-check-label mb-0" for="flexCheckDefault1">
+                                                   All supplier
+                                               </label>
+                                             </div>
+                                          </li>
+
+                                          <li style="list-style:none;">
+                                             <div class="form-check mb-3">
+                                               <input class="form-check-input mt-0 slectOne" type="checkbox" id="sp_10" name="user_menu[19][]" value="sp_1" <?php if(in_array(19, $menu_arr) && in_array('sp_1', $submenu_arr)) { echo 'checked'; }  ?> >
+                                               <label class="form-check-label mb-0" for="flexCheckDefault2">
+                                                   Specific supplier
+                                               </label>
+                                             </div>
+                                          </li>
+
+                                          <li style="list-style:none;">
+                                             <div class="form-check mb-3">
+                                               <input class="form-check-input mt-0 viewOne" type="checkbox" id="view_19" name="user_menu[19][1]" value="0" <?php if(in_array(19, $menu_arr) && $get_sub_menu19[0]['permissionType'] == '1' ) { echo 'checked'; }  ?> >
+                                               <label class="form-check-label mb-0" for="flexCheckDefault">
+                                                   View
+                                               </label>
+                                             </div>
+                                          </li>
+                                      </ul>
+                                 </div>
+
+                                 <div class="form-check mb-2">
+                                   <input class="form-check-input mt-0 parent_menu_24" type="checkbox" value="24" id="24" name="user_menu[24]" data-id="24" <?php if(in_array(24, $menu_arr)) { echo 'checked'; }  ?>>
+                                   <label class="form-check-label" for="flexCheckDefault"style="margin-left: 7px;">
+                                       Product Information
+                                   </label>
+                                      <ul style="padding-left: 12px; margin-top: 5px;" class="summaryCard content_hidden content_option_24 card2">
+                                          <li style="list-style:none;">
+                                             <div class="form-check mb-2">
+                                               <input class="form-check-input mt-0 viewOne" type="checkbox" value="0" id="view_24" name="user_menu[24][1]" <?php if(in_array(24, $menu_arr) && $get_sub_menu24[0]['permissionType'] == '1' ) { echo 'checked'; }  ?> >
+                                               <label class="form-check-label mb-0" for="flexCheckDefault">
+                                                   View
+                                               </label>
+                                             </div>
+                                          </li>                                    
+                                      </ul>
+                                 </div>
+
+                                 <div class="form-check mb-3">
+                                   <input class="form-check-input mt-0 parent_menu" type="checkbox" value="56" id="parent_56"  name="user_menu[56]" data-id="56" <?php if(in_array(56, $menu_arr)) { echo 'checked'; }  ?> >
+                                   <label class="form-check-label mb-0 ml-3" for="flexCheckDefault" style="margin-left: 7px;">
+                                        Membership Information
+                                   </label>
+                                 </div>
+
+                                 <div class="form-check mb-2">
+                                   <input class="form-check-input mt-0 parent_menu_64" type="checkbox" value="64" id="64" name="user_menu[64]" data-id="64" <?php if(in_array(64, $menu_arr)) { echo 'checked'; }  ?> >
+                                   <label class="form-check-label" for="flexCheckDefault" style="margin-left: 7px;">
+                                       Sales Management
+                                   </label>
+                                      <ul style="padding-left: 12px; margin-top: 5px;" class="summaryCard content_hidden content_option_64 card2" >
+                                          <li style="list-style:none;">
+                                             <div class="form-check mb-2">
+                                               <input class="form-check-input mt-0 viewOne" type="checkbox" value="1" id="view_64" name="user_menu[64][1]" <?php if(in_array(64, $menu_arr) && $get_sub_menu64[0]['permissionType'] == '1' ) { echo 'checked'; }  ?> >
+                                                <label class="form-check-label mb-0" for="flexCheckDefault">
+                                                   View
+                                                </label>
+                                             </div>
+                                          </li>                                    
+                                      </ul>
+                                 </div>
+
+                                 <div class="form-check mb-0">
+                                    <input class="form-check-input mt-0 parent_menu" type="checkbox" value="45" id="parent_45" name = "user_menu[45]" <?php if(in_array(45, $menu_arr)) { echo 'checked'; }  ?> >
+                                    <label class="form-check-label mb-0 ml-3" for="flexCheckDefault" style="margin-left: 7px;">
+                                       Settings
+                                   </label>
+                                 </div>
+                              </div>
+                           <?php } else { ?>
+                              <div class="box-body">
+                                 <?php if(!empty($menulist)) { ?>
+                                    <div style="padding-left:20px">
+                                       <div class="form-check mb-3">
+                                         <input class="form-check-input mt-0 parent_menu" type="checkbox" name="user_menu[47]" value="47" id="parent_47" data-id = "47">
+                                          <label class="form-che5ck-label mb-0" for="flexCheckDefault" style="margin-left: 7px;">
+                                             User Management
+                                          </label>
+                                       </div>
+
+                                       <div class="form-check mb-3">
+                                         <input class="form-check-input parent_menu_19" name="user_menu[19]" id="19" type="checkbox" value="19" data-id = "19"><span style="margin-left: 10px;font-weight: 700;">Supplier Information</span>
+                                             <ul style="padding-left: 12px; margin-top: 10px;" class="summaryCard content_hidden content_option_19 card2">
+                                                <li style="list-style:none;">
+                                                   <div class="form-check mb-3">
+                                                     <input class="form-check-input mt-0 slectOne" type="checkbox" id="all_1" name="user_menu[19][]" value="all_1" >
+                                                     <label class="form-check-label mb-0" for="flexCheckDefault1">
+                                                         All supplier
+                                                     </label>
+                                                   </div>
+                                                </li>
+
+                                                <li style="list-style:none;">
+                                                   <div class="form-check mb-3">
+                                                     <input class="form-check-input mt-0 slectOne" type="checkbox" id="sp_10" name="user_menu[19][]" value="sp_1">
+                                                     <label class="form-check-label mb-0" for="flexCheckDefault2">
+                                                         Specific supplier
+                                                     </label>
+                                                   </div>
+                                                </li>
+
+                                                <li style="list-style:none;">
+                                                   <div class="form-check mb-3">
+                                                     <input class="form-check-input mt-0 viewOne" type="checkbox" id="view_19" name="user_menu[19][1]" value="0">
+                                                     <label class="form-check-label mb-0" for="flexCheckDefault">
+                                                         View
+                                                     </label>
+                                                   </div>
+                                                </li>
+                                            </ul>
+                                       </div>
+
+                                       <div class="form-check mb-2">
+                                         <input class="form-check-input mt-0 parent_menu_24" type="checkbox" value="24" id="24" name="user_menu[24]" data-id="24" >
+                                         <label class="form-check-label" for="flexCheckDefault"style="margin-left: 7px;">
+                                             Product Information
+                                         </label>
+                                            <ul style="padding-left: 12px; margin-top: 5px;" class="summaryCard content_hidden content_option_24 card2">
+                                                <li style="list-style:none;">
+                                                   <div class="form-check mb-2">
+                                                     <input class="form-check-input mt-0 viewOne" type="checkbox" value="0" id="view_24" name="user_menu[24][1]">
+                                                     <label class="form-check-label mb-0" for="flexCheckDefault">
+                                                         View
+                                                     </label>
+                                                   </div>
+                                                </li>                                    
+                                            </ul>
+                                       </div>
+
+                                       <div class="form-check mb-3">
+                                         <input class="form-check-input mt-0 parent_menu" type="checkbox" value="56" id="parent_56"  name="user_menu[56]" data-id="56" >
+                                         <label class="form-check-label mb-0 ml-3" for="flexCheckDefault" style="margin-left: 7px;">
+                                              Membership Information
+                                         </label>
+                                       </div>
+
+                                       <div class="form-check mb-2">
+                                         <input class="form-check-input mt-0 parent_menu_64" type="checkbox" value="64" id="64" name="user_menu[64]" data-id="64" >
+                                         <label class="form-check-label" for="flexCheckDefault" style="margin-left: 7px;">
+                                             Sales Management
+                                         </label>
+                                            <ul style="padding-left: 12px; margin-top: 5px;" class="summaryCard content_hidden content_option_64 card2" >
+                                                <li style="list-style:none;">
+                                                   <div class="form-check mb-2">
+                                                     <input class="form-check-input mt-0 viewOne" type="checkbox" value="1" id="view_64" name="user_menu[64][1]">
+                                                      <label class="form-check-label mb-0" for="flexCheckDefault">
+                                                         View
+                                                      </label>
+                                                   </div>
+                                                </li>                                    
+                                            </ul>
+                                       </div>
+
+                                       <div class="form-check mb-0">
+                                          <input class="form-check-input mt-0 parent_menu" type="checkbox" value="45" id="parent_45" name = "user_menu[45]" >
+                                          <label class="form-check-label mb-0 ml-3" for="flexCheckDefault" style="margin-left: 7px;">
+                                             Settings
+                                         </label>
+                                       </div>
+                                    </div>
+                                 <?php } ?>
+                              </div>
+                           <?php } ?>  
+                           <?php } ?>
+                        </div>
+
+                  <?php } else { ?>
+                        <div class="box-body">
+                           <div class="form-group"> 
+                              <label for="">Users <span class="text-danger">*</span></label>
+                              <select name="user_id" class="form-control user_id" required="required" disabled>
+                                 <?php if(!empty($user_list)){ ?>
+                                    <option value="">--Select Users--</option>
+                                    <?php foreach ($user_list as $key => $user_value){ ?>
+                                       <option <?php if($user_value['id'] == base64_decode($userId_segment)) echo "selected"; ?>  value="<?php echo $user_value['id']; ?>" ><?php echo $user_value['name']; ?></option>
+                                    <?php } ?>
+                                 <?php } else { ?>
+                                    <option value="">No Record Found</option>
+                                 <?php } ?>   
+                             </select>
+                           </div>
+                           <input type="hidden" name="admin_user_id" value="<?php echo $userId; ?>">
+                           <div class="form-group">
+                              <div class= "col-md-12">
+                                 <label class="tree-title" style="margin-bottom: 16px;">Menu Permissison <span class="text-danger">*</span> </label> 
+                                 <div class="row tree-menu-management">
+                                    <?php if(!empty($menulist)) { 
+                                       foreach ($menulist as $key => $p_value) {
+                                       $get_sub_menu = getSubMenuInfo($userId_segment,$p_value['id']); ?>
+                                          <div class= "col-md-12 mb-15px">
+                                             <ul class="tree-ul">
+                                                <li>
+                                                   <?php if(!empty($menu_arr)){ ?>
+                                                      <div class="link-holder ">
+                                                         <input type="checkbox" id="parent_<?php echo $p_value['id']; ?>" name="user_menu[<?php echo $p_value['id']; ?>]" value="<?php echo $p_value['id']; ?>" class="parent_menu" data-id = "<?php echo $p_value['id']; ?>"  <?php if(in_array($p_value['id'], $menu_arr)) { echo 'checked'; } ?> >
+                                                         <label> <?php echo $p_value['menu_name']; ?></label>
+                                                      </div>
+
+                                                   <?php } else { ?>
+                                                      <div class="link-holder">
+                                                         <input type="checkbox" id="parent_<?php echo $p_value['id']; ?>" name="user_menu[<?php echo $p_value['id']; ?>]" value="<?php echo $p_value['id']; ?>" class="parent_menu" data-id = "<?php echo $p_value['id']; ?>" >
+                                                         <label> <?php echo $p_value['menu_name']; ?></label>
+                                                      </div>
+                                                   <?php } ?>
+                                                  
+                                                   <ul class="option_<?php echo $p_value['id']; ?> option_0">
+                                                      <?php if(!empty($get_sub_menu)) { ?>
+                                                         <?php if ($p_value['id'] == 19) { ?>
+                                                            <li class="all_1_vendor">
+                                                               <div>
+                                                                  <input type="checkbox" id="all_1" name="user_menu[19][]" value="all_1" class="slectOne" data-id="1 selected" <?php if($p_value['id'] == 19 && $get_sub_menu[0]['sub_menu'] == 'all_1') { echo 'checked'; } ?> > <label>All Supplier</label>
+                                                               </div>
+                                                            </li>
+                                                            <li class="sp_vendor_1">
+                                                               <div class="sp_vendor">
+                                                                  <input type="checkbox" id="sp_10" name="user_menu[19][]" value="sp_1" class="slectOne" data-id="2 selected" <?php if($p_value['id'] == 19 && $get_sub_menu[0]['sub_menu'] == 'sp_1') { echo 'checked'; } ?> > <label>Specific Supplier</label> <span>(In next screen you need to select supplier )</span>
+                                                               </div>
+                                                            </li>
+                                                            <li class="sp_view_<?php echo $p_value['id']; ?> sp_view" >
+                                                               <div class="sp_view">
+                                                                  <input type="checkbox" id="sp_view_<?php echo $p_value['id']; ?>" name="user_menu[<?=$p_value['id']?>][]" value="1" class="viewOne" <?php if($p_value['id'] == 19 && $get_sub_menu[0]['permissionType'] == '1') { echo 'checked'; } ?> > <label>View</label>
+                                                               </div>
+                                                            </li>
+                                                         <?php } else { ?>
+                                                            <li class="default_view_<?php echo $p_value['id']; ?> default_view" data-pid="<?php echo $p_value['id']; ?>">
+                                                               <div class="sp_view">
+                                                                  <input type="checkbox" id="sp_view_<?php echo $p_value['id']; ?>" name="user_menu[<?=$p_value['id']?>][1]" value="1" class="viewOne" <?php if($p_value['id'] == 24 && $get_sub_menu[0]['permissionType'] == '1') { echo 'checked'; } ?>> <label>View</label>
+                                                               </div>
+                                                            </li>
+                                                         <?php } ?>
+                                                         
+
+                                                    <?php } else {  
+                                                         if ($p_value['id'] == 19) { ?>
+                                                            <li class="all_1_vendor">
+                                                               <div>
+                                                                  <input type="checkbox" id="all_1" name="user_menu[19]['type_of_permission']" value="all_1" class="slectOne" data-id="1 selected" > <label>All Supplier</label>
+                                                               </div>
+                                                            </li>
+                                                            <li class="sp_vendor_1">
+                                                               <div class="sp_vendor">
+                                                                  <input type="checkbox" id="sp_10" name="user_menu[19]['type_of_permission']" value="sp_1" class="slectOne" data-id="2 selected" > <label>Specific Supplier</label> <span>(In next screen you need to select supplier )</span>
+                                                               </div>
+                                                            </li>
+                                                            <li class="sp_view_<?php echo $p_value['id']; ?>">
+                                                               <div class="sp_view">
+                                                                  <input type="checkbox" id="sp_view_<?php echo $p_value['id']; ?>" name="user_menu[<?=$p_value['id']?>][1]" value="1" class="viewOne" > <label>View</label>
+                                                               </div>
+                                                            </li>
+                                                         <?php } else { ?>
+                                                            <li class="default_view_<?php echo $p_value['id']; ?> default_view" >
+                                                               <div class="sp_view_1">
+                                                                  <input type="checkbox" id="sp_view_<?php echo $p_value['id']; ?>" name="user_menu[<?=$p_value['id']?>][1]" value="1" class="viewOne"> <label>View</label>
+                                                               </div>
+                                                            </li>
+                                                         <?php } ?>
+                                                      
+                                                    <?php } ?>  
+                                                   </ul>
+
+                                                   <!-- <ul class="option_1">
+                                                         <div class="sp_view">
+                                                            <input type="checkbox" id="sp_view" name="type_of_permission" value="view" class="viewOne"> <label>View</label>
+                                                         </div>
+                                                      </li>
+                                                   </ul> -->
+                                                   <!-- <?php if(!empty($p_value['submenu'])){ 
+                                                      foreach ($p_value['submenu'][$p_value['id']] as $skey => $sub_value) { ?>
+                                                         <ul>
+                                                            <li>
+                                                               <div>
+                                                                  <input type="checkbox" id="sub_<?php echo $sub_value['id']; ?>" name="user_menu[<?php echo $p_value['id'] ;?>][<?php echo $sub_value['id']; ?>]" value="<?php echo $sub_value['id']; ?>">
+                                                                  <label><?php echo $sub_value['menu_name']; ?></label>
+                                                               </div>
+                                                               <?php if(!empty($sub_value['micro_menu'])){ ?>
+                                                                  <ul>
+                                                                     <?php foreach ($sub_value['micro_menu'][$sub_value['id']] as $mkey => $m_value){ ?>
+                                                                        <li>
+                                                                           <div>
+                                                                              <input type="checkbox" id="micro_<?php echo $m_value['id']; ?>" name="user_menu[<?php echo $p_value['id']; ?>][<?php echo $sub_value['id'] ;?>][<?php echo $m_value['id']; ?>]" value="<?php echo $m_value['id']; ?>">
+                                                                              <label><?php echo $m_value['menu_name']; ?></label>
+                                                                           </div>
+                                                                        </li>
+                                                                     <?php } ?>
+                                                                  </ul>
+                                                               <?php } ?>   
+                                                            </li>
+                                                         </ul>
+                                                      <?php } ?>
+                                                      
+                                                   <?php } ?>   --> 
+                                                </li>
+                                             </ul>
+                                          </div>
+                                    <?php }  } ?>
+                                 </div>
+                              </div>
+                        </div>
+                  <?php } ?>  
+                     <!-- /.box-body -->
+                     <div class="box-footer mt-25 d-inline-block w-100">
+                        <button type="submit" name="submit" class="btn btn-primary">Submit</button>
+                        <a href="#"><button type="button" name="submit" class="btn btn-warning" onclick="history.back()">Back to user</button></a>
+                     </div>
+                     <?php echo form_close(); ?>
+                  </div>
+               </form>   
+            </div>
+         </div>
+      </section>
+   </div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+<script src="<?php echo base_url('scripts/user.js'); ?>"></script>
+ 

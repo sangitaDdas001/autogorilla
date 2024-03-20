@@ -1,0 +1,1051 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+class ProductModel extends CI_Model {
+
+	public function getProducts($limit=10, $offset = 0,$search ='',$vendor_id='',$searchByFromMinDate='',$searchByToMaxDate=''){
+		$this->db->select("c_per.company_id");
+		$this->db->from('company_permission_tbl c_per');
+		$this->db->where(array('c_per.admin_user_id' => $_SESSION['adminsessiondetails']['id'],'c_per.status'=>1));
+		$query = $this->db->get();
+        $data  = $query->result_array();
+
+        $this->db->select("p_assign.product_id,p_assign.user_id");
+		$this->db->from('product_assign_user p_assign');
+		$this->db->where(array('p_assign.user_id' => $_SESSION['adminsessiondetails']['id'],'p_assign.status'=>1));
+		$query   = $this->db->get();
+        $data_1  = $query->result_array();
+
+
+		if($_SESSION['adminsessiondetails']['id'] != 1){ 
+			$companyIds   = []; $implode_companyId = []; $product_ids =[]; $implode_product_id = [];
+        	foreach ($data as $key => $company_ids) {
+        		$companyIds[] = $company_ids['company_id'];
+        	}
+        	$implode_companyId = implode(',',$companyIds);
+
+        	if(!empty($data_1)){
+        		foreach ($data_1 as $key => $ass_value) {
+        			$product_ids[] = $ass_value['product_id'];
+        		}
+        		$implode_product_id = implode(',',$product_ids);
+        	}
+
+        	if(!empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+				$whereDate = "DATE(p.created_at) BETWEEN '".$searchByFromMinDate."' AND '".$searchByToMaxDate."' " ;
+			}else if(!empty($searchByFromMinDate) && empty($searchByToMaxDate)){
+				$whereDate = "DATE(p.created_at) >= '".$searchByFromMinDate."' " ;
+			}else if(empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+				$whereDate = "DATE(p.created_at) <= '".$searchByToMaxDate."' ";
+			}else{
+				$whereDate = '';
+			}
+
+			$this->db->select("SQL_CALC_FOUND_ROWS p.product_img_1, CONCAT(UPPER(SUBSTRING(p.product_name,1,1)),LOWER(SUBSTRING(p.product_name,2))) as product_name,  p.selling_price_currency, p.product_selling_price, p.selling_price_currency , CONCAT(p.selling_price_currency,' ', p.product_selling_price) as product_price , date_format(p.created_at,'%d-%m-%y %h:%i:%s %p') as created_at, IF(p.status = '1','Active','Inactive') AS `status`,p.product_id,CASE WHEN p.approved_status = '1' THEN 'Approved' WHEN p.approved_status = '3' THEN 'Reject' ELSE 'Pending' END AS `approved_status`, p.vendor_id,p.product_mapped, p_s.total_score, v.vendor_catalog_url_slug, v.email,v.password , CONCAT(UPPER(SUBSTRING(v.company_name,1,1)),LOWER(SUBSTRING(v.company_name,2))) as company_name",FALSE);
+			$this->db->from('product p');
+			$this->db->join('vendor_info v' ,'v.id = p.vendor_id','left');
+			$this->db->join('product_assign_user p_assign', 'p_assign.product_id = p.product_id', 'left');
+			$this->db->join('vendor_product_score_table p_s' ,'p_s.product_id = p.product_id','left');
+			
+
+			if(!empty($vendor_id)){
+				$this->db->where(array('p.status !='=>2,'p.vendor_id'=>base64_decode($vendor_id)));
+			}else{
+				$this->db->where(array('p.status !='=>2,'p.approved_status'=>0));
+			}
+
+			if(!empty($data)){
+				$this->db->where_in('p.vendor_id', $companyIds);
+			}
+
+			if(!empty($product_ids)){
+				$this->db->where_in('p.product_id', $product_ids);
+			}else{
+				$this->db->where('p_assign.product_id IS NULL');
+			}
+
+			if(!empty($whereDate)){
+				$this->db->where($whereDate);
+			}
+
+			if (!empty($search)) {
+				$this->db->group_start();
+	 			$this->db->like('p.product_name', $search, 'after');
+	 			$this->db->or_like('v.company_name', $search, 'both');
+	 			$this->db->group_end();
+			}
+			$this->db->group_by('p.product_id');
+			$this->db->order_by('p.product_id','DESC');
+			$this->db->limit($limit,$offset);
+			$query = $this->db->get();
+
+	      
+	        $countQuery 		 = $this->db->query('SELECT FOUND_ROWS() AS `Count`');
+	        $data['total_count'] = $countQuery->row()->Count;
+	        $data['fetch_count'] = $query->num_rows();
+	        $data['fetch_data']  = $query->result_array();
+	        return $data;
+		} else {
+			if(!empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+				$whereDate = "DATE(p.created_at) BETWEEN '".$searchByFromMinDate."' AND '".$searchByToMaxDate."' " ;
+			}else if(!empty($searchByFromMinDate) && empty($searchByToMaxDate)){
+				$whereDate = "DATE(p.created_at) >= '".$searchByFromMinDate."' " ;
+			}else if(empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+				$whereDate = "DATE(p.created_at) <= '".$searchByToMaxDate."' ";
+			}else{
+				$whereDate = '';
+			}
+			$this->db->select("SQL_CALC_FOUND_ROWS p.product_img_1, CONCAT(UPPER(SUBSTRING(p.product_name,1,1)),LOWER(SUBSTRING(p.product_name,2))) as product_name,  p.selling_price_currency, p.product_selling_price, p.selling_price_currency , CONCAT(p.selling_price_currency,' ', p.product_selling_price) as product_price , date_format(p.created_at,'%d-%m-%y %h:%i:%s %p') as created_at, IF(p.status = '1','Active','Inactive') AS `status`,p.product_id,CASE WHEN p.approved_status = '1' THEN 'Approved' WHEN p.approved_status = '3' THEN 'Reject' ELSE 'Pending' END AS `approved_status`, p.vendor_id,p.product_mapped, p_s.total_score, v.vendor_catalog_url_slug, v.email,v.password , CONCAT(UPPER(SUBSTRING(v.company_name,1,1)),LOWER(SUBSTRING(v.company_name,2))) as company_name",FALSE);
+			$this->db->from('product p');
+			$this->db->join('vendor_info v' ,'v.id = p.vendor_id','left');
+			$this->db->join('vendor_product_score_table p_s' ,'p_s.product_id = p.product_id','left');
+			if(!empty($vendor_id)){
+				$this->db->where(array('p.status !='=>2,'p.vendor_id'=>base64_decode($vendor_id)));
+			}else{
+				$this->db->where(array('p.status !='=>2,'p.approved_status'=>0));
+			}
+			if(!empty($whereDate)){
+				$this->db->where($whereDate);
+			}
+			if (!empty($search)) {
+				$this->db->group_start();
+	 			$this->db->like('p.product_name', $search, 'after');
+	 			$this->db->or_like('v.company_name', $search, 'both');
+	 			$this->db->group_end();
+			}
+			//$str = $this->db->last_query();
+			//echo $str;exit;
+			$this->db->group_by('p.product_id');
+			$this->db->order_by('p.product_id','DESC');
+			$this->db->limit($limit,$offset);
+			$query = $this->db->get();
+
+	        $countQuery 		 = $this->db->query('SELECT FOUND_ROWS() AS `Count`');
+	        $data['total_count'] = $countQuery->row()->Count;
+	        $data['fetch_count'] = $query->num_rows();
+	        $data['fetch_data']  = $query->result_array();
+	        return $data;
+	    }
+	}
+
+	public function getAllProducts($limit=10, $offset = 0,$search ='',$searchByFromMin='',$searchByToMax='',$searchByFromMinDate='',$searchByToMaxDate=''){
+		$this->db->select("c_per.company_id");
+		$this->db->from('company_permission_tbl c_per');
+		$this->db->where(array('c_per.admin_user_id' => $_SESSION['adminsessiondetails']['id'],'c_per.status'=>1));
+		$query = $this->db->get();
+        $data  = $query->result_array();
+       
+       	$this->db->select("p_assign.product_id,p_assign.user_id");
+		$this->db->from('product_assign_user p_assign');
+		$this->db->where(array('p_assign.user_id' => $_SESSION['adminsessiondetails']['id'],'p_assign.status'=>1));
+		$query   = $this->db->get();
+        $data_1  = $query->result_array();
+
+        if($_SESSION['adminsessiondetails']['id'] != 1){
+        	$companyIds   = []; $implode_companyId = []; $product_ids =[]; $implode_product_id = [];
+
+        	if(!empty($data_1)){
+        		foreach ($data_1 as $key => $ass_value) {
+        			$product_ids[] = $ass_value['product_id'];
+        		}
+        		$implode_product_id = implode(',',$product_ids);
+        	}
+
+        	foreach ($data as $key => $company_ids) {
+        		$companyIds[] = $company_ids['company_id'];
+        	}
+        	$implode_companyId = implode(',',$companyIds);
+        	//echo '<pre>';print_r($companyIds);
+
+
+        	
+        	if(!empty($searchByFromMin) && !empty($searchByToMax)) {
+				 $where = "p_s.total_score BETWEEN ".$searchByFromMin." AND ".$searchByToMax." " ;
+			}else if(!empty($searchByFromMin) && empty($searchByToMax)){
+				$where = "p_s.total_score >= ".$searchByFromMin." " ;
+			}else if(empty($searchByFromMin) && !empty($searchByToMax)) {
+				$where = "p_s.total_score <= ".$searchByFromMin." ";
+			}else{
+				 $where = '';
+			}
+
+			if(!empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+				$whereDate = "DATE(p.created_at) BETWEEN '".$searchByFromMinDate."' AND '".$searchByToMaxDate."' " ;
+			}else if(!empty($searchByFromMinDate) && empty($searchByToMaxDate)){
+				$whereDate = "DATE(p.created_at) >= '".$searchByFromMinDate."' " ;
+			}else if(empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+				$whereDate = "DATE(p.created_at) <= '".$searchByToMaxDate."' ";
+			}else{
+				$whereDate = '';
+			}
+
+			$this->db->select("SQL_CALC_FOUND_ROWS p.product_img_1, CONCAT(UPPER(SUBSTRING(p.product_name,1,1)),LOWER(SUBSTRING(p.product_name,2))) as product_name,  p.selling_price_currency, p.product_selling_price, p.selling_price_currency , CONCAT(p.selling_price_currency,' ', p.product_selling_price) as product_price , date_format(p.created_at,'%d-%m-%y %h:%i:%s %p') as created_at, IF(p.status = '1','Active','Inactive') AS `status`,p.product_id,CASE WHEN p.approved_status = '1' THEN 'Approved' WHEN p.approved_status = '3' THEN 'Reject' ELSE 'Pending' END AS `approved_status`, p.vendor_id,p.product_mapped, p_s.total_score, v.vendor_catalog_url_slug, v.email,v.password , CONCAT(UPPER(SUBSTRING(v.company_name,1,1)),LOWER(SUBSTRING(v.company_name,2))) as company_name",FALSE);
+			$this->db->from('product p');
+			$this->db->join('vendor_info v' ,'v.id = p.vendor_id','left');
+			$this->db->join('product_assign_user p_assign', 'p_assign.product_id = p.product_id', 'left');
+			$this->db->join('vendor_product_score_table p_s' ,'p_s.product_id = p.product_id','left');
+			$this->db->where(array('p.status !='=>2));
+			//$this->db->where('p_assign.product_id IS NULL');
+			if(!empty($data)){
+				$this->db->where_in('p.vendor_id', $companyIds);
+			}
+
+			if(!empty($product_ids)){
+				$this->db->where_in('p.product_id', $product_ids);
+			}else{
+				$this->db->where('p_assign.product_id IS NULL');
+			}
+
+			if(!empty($where)){
+				$this->db->where($where);
+			}
+			if(!empty($whereDate)){
+				$this->db->where($whereDate);
+			}
+			if (!empty($search)) {
+	 			$this->db->group_start();
+	 			$this->db->like('p.product_name', $search, 'after');
+	 			$this->db->or_like('v.company_name', $search, 'both');
+	 			$this->db->group_end();
+			}
+
+			$this->db->group_by('p.product_id');
+			$this->db->order_by('p.product_id','DESC');
+			$this->db->limit($limit,$offset);
+			$query = $this->db->get();
+	        $countQuery 		 = $this->db->query('SELECT FOUND_ROWS() AS `Count`');
+	        $data['total_count'] = $countQuery->row()->Count;
+	        $data['fetch_count'] = $query->num_rows();
+	        $data['fetch_data']  = $query->result_array();
+	        return $data;
+        } else {
+        	if(!empty($searchByFromMin) && !empty($searchByToMax)) {
+				 $where = "p_s.total_score BETWEEN ".$searchByFromMin." AND ".$searchByToMax." " ;
+			}else if(!empty($searchByFromMin) && empty($searchByToMax)){
+				$where = "p_s.total_score >= ".$searchByFromMin." " ;
+			}else if(empty($searchByFromMin) && !empty($searchByToMax)) {
+				$where = "p_s.total_score <= ".$searchByFromMin." ";
+			}else{
+				 $where = '';
+			}
+
+			if(!empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+				$whereDate = "DATE(p.created_at) BETWEEN '".$searchByFromMinDate."' AND '".$searchByToMaxDate."' " ;
+			}else if(!empty($searchByFromMinDate) && empty($searchByToMaxDate)){
+				$whereDate = "DATE(p.created_at) >= '".$searchByFromMinDate."' " ;
+			}else if(empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+				$whereDate = "DATE(p.created_at) <= '".$searchByToMaxDate."' ";
+			}else{
+				$whereDate = '';
+			}
+
+			$this->db->select("SQL_CALC_FOUND_ROWS p.product_img_1, CONCAT(UPPER(SUBSTRING(p.product_name,1,1)),LOWER(SUBSTRING(p.product_name,2))) as product_name,  p.selling_price_currency, p.product_selling_price, p.selling_price_currency , CONCAT(p.selling_price_currency,' ', p.product_selling_price) as product_price , date_format(p.created_at,'%d-%m-%y %h:%i:%s %p') as created_at, IF(p.status = '1','Active','Inactive') AS `status`,p.product_id,CASE WHEN p.approved_status = '1' THEN 'Approved' WHEN p.approved_status = '3' THEN 'Reject' ELSE 'Pending' END AS `approved_status`, p.vendor_id,p.product_mapped, p_s.total_score, v.vendor_catalog_url_slug, v.email,v.password , CONCAT(UPPER(SUBSTRING(v.company_name,1,1)),LOWER(SUBSTRING(v.company_name,2))) as company_name",FALSE);
+			$this->db->from('product p');
+			$this->db->join('vendor_info v' ,'v.id = p.vendor_id','left');
+			$this->db->join('vendor_product_score_table p_s' ,'p_s.product_id = p.product_id','left');
+			$this->db->where(array('p.status !='=>2));
+			if(!empty($where)){
+				$this->db->where($where);
+			}
+			if(!empty($whereDate)){
+				$this->db->where($whereDate);
+			}
+			if (!empty($search)) {
+	 			$this->db->group_start();
+	 			$this->db->like('p.product_name', $search, 'after');
+	 			$this->db->or_like('v.company_name', $search, 'both');
+	 			$this->db->group_end();
+			}
+			$this->db->group_by('p.product_id');
+			$this->db->order_by('p.product_id','DESC');
+			$this->db->limit($limit,$offset);
+			$query = $this->db->get();
+	    
+	        $countQuery 		 = $this->db->query('SELECT FOUND_ROWS() AS `Count`');
+	        $data['total_count'] = $countQuery->row()->Count;
+	        $data['fetch_count'] = $query->num_rows();
+	        $data['fetch_data']  = $query->result_array();
+	        return $data;
+	    }
+	}
+
+
+	public function changeProductStatus($data){
+		$sql = "UPDATE product SET status = ( CASE WHEN STATUS = '1' THEN '0' ELSE '1' END ) WHERE product_id = ?";
+		$query = $this->db->query($sql, array(base64_decode($data['product_id'])));
+		return $query;
+	}
+
+	public function changeProductApprovedStatus($data){
+		$sql = "UPDATE product SET approved_status = ( CASE WHEN APPROVED_STATUS = '1' THEN '0' ELSE '1' END ) WHERE product_id = ?";
+		$query = $this->db->query($sql, array(base64_decode($data['product_id'])));
+		return $query;
+	}
+
+	public function fetchProductDetails($data){
+		$finalArr = array(); $mcat =array();
+		$this->db->select("p.product_name, p.brand, p.product_description, p.product_code, p.product_img_1,p.product_img_2, p.product_img_3, p.product_video_1, p.product_video_2,p.product_video_3, p.selling_price_currency, p.product_img_1, p.product_selling_price, p.selling_price_currency , CONCAT(p.selling_price_currency,' ', p.product_selling_price) as product_price , date_format(p.created_at,'%d-%m-%y %h:%i:%s %p') as created_at, p.product_id,IF(p.approved_status = '1','Approved','Not Approved') AS `a_status`,p.vendor_id,v.name as vendor_name,p.approved_status");
+		$this->db->from('product p');
+		$this->db->join('vendor_info v','v.id = p.vendor_id','left');
+		$this->db->where(array('p.product_id'=>base64_decode($data['product_id']),'p.status !='=>2));
+		$query = $this->db->get();
+		$pdata  = $query->result_array();
+		
+		$this->db->select("specTbl.id,specTbl.title,specTbl.specification_details");
+		$this->db->from('product_specification_tbl specTbl');
+		$this->db->where(array('specTbl.status'=>1,'specTbl.product_id'=>base64_decode($data['product_id'])));
+		$query = $this->db->get();
+		$sp_data  = $query->result_array();
+		$productdata = array_push($finalArr,$pdata[0]);
+		if(!empty($productdata)){
+			$finalArr[0]['specification'] = $sp_data;
+		}
+
+		$this->db->select("cat.id,cat.category_name,scat.category_name as sub_cat, p_m_t.autogorila_parent_cat_id, p_m_t.autogorila_sub_cat_id");
+		$this->db->from('vendor_product_mapping p_m_t');
+		$this->db->join('auto_category cat','cat.id = p_m_t.autogorila_parent_cat_id','left');
+		$this->db->join('auto_category scat','scat.id = p_m_t.autogorila_sub_cat_id','left');
+		$this->db->where(array('p_m_t.status'=>1,'p_m_t.product_id'=>base64_decode($data['product_id'])));
+		$this->db->group_by('p_m_t.autogorila_parent_cat_id');
+		$query = $this->db->get();
+		$mapped_category_data  = $query->result_array();
+		
+			
+		$this->db->select("mcat.category_name as micro_cat, p_m_t.autogorila_micro_cat_id");
+		$this->db->from('vendor_product_mapping p_m_t');
+		$this->db->join('auto_category mcat','mcat.id = p_m_t.autogorila_micro_cat_id','left');
+		$this->db->where(array('p_m_t.status'=>1,'p_m_t.product_id'=>base64_decode($data['product_id'])));
+		$query = $this->db->get();
+		$mcat_data  = $query->result_array();
+		foreach ($mcat_data as $key => $mvalue) {
+			$mcat[] = $mvalue['micro_cat'];
+		}
+		if(!empty($mcat_data)){
+			$implode_mData = implode(', ',$mcat);
+			$mapped_category_data[0]['micro_cat_name'] = $implode_mData;
+			$finalArr[0]['category_mapping'] = $mapped_category_data;
+		}
+		return $finalArr;
+	}
+
+	public function productRejectedStatus($data){
+		$sql = "UPDATE product SET approved_status  = 3 WHERE product_id = ?";
+		$query = $this->db->query($sql, array(base64_decode($data['product_id'])));
+		return $query;
+	}
+
+	public function getMicroCategoryNameBySubCat($sub_catId){
+		$this->db->select("catN.category_name,catN.id");
+		$this->db->from('auto_category catN');
+		$this->db->where(array('catN.sub_cat_id'=>$sub_catId,'catN.status '=>'A','catN.cat_level'=>3));
+		$this->db->order_by('catN.id','ASC');
+		$query 			= $this->db->get();
+		$numrows_pCat 	= $query->num_rows();
+        $result 		= $query->result_array();
+		return $result;
+	}
+
+	public function update($data,$id,$table){
+		$this->db->set($data);
+		$this->db->where('product_id', $id);
+		$res = $this->db->update($table);
+		return $res;
+	}
+
+	public function getvendorInfoById($vendorId){
+		$this->db->select("v.company_name, v.name,v.city_id, v.state_id, as.state_name, ac.city_name");
+		$this->db->from('vendor_info v');
+		$this->db->join('auto_city ac', 'ac.id = v.city_id','left');
+		$this->db->join('auto_state as', 'as.id = v.state_id','left');
+		$this->db->where(array('v.id'=>base64_decode($vendorId)));
+		$query = $this->db->get();
+		$data  = $query->result_array();
+		return $data;
+	}
+
+	public function rejectedGetProducts($limit=10, $offset = 0,$search ='',$searchByFromMinDate='',$searchByToMaxDate=''){
+		$this->db->select("c_per.company_id");
+		$this->db->from('company_permission_tbl c_per');
+		$this->db->where(array('c_per.admin_user_id' => $_SESSION['adminsessiondetails']['id'],'c_per.status'=>1));
+		$query = $this->db->get();
+        $data  = $query->result_array();
+
+        $this->db->select("p_assign.product_id,p_assign.user_id");
+		$this->db->from('product_assign_user p_assign');
+		$this->db->where(array('p_assign.user_id' => $_SESSION['adminsessiondetails']['id'],'p_assign.status'=>1));
+		$query   = $this->db->get();
+        $data_1  = $query->result_array();
+
+        if($_SESSION['adminsessiondetails']['id'] != 1){
+        	$companyIds   = []; $implode_companyId = []; $product_ids =[]; $implode_product_id = [];
+        	if(!empty($data_1)){
+        		foreach ($data_1 as $key => $ass_value) {
+        			$product_ids[] = $ass_value['product_id'];
+        		}
+        		$implode_product_id = implode(',',$product_ids);
+        	}
+
+        	foreach ($data as $key => $company_ids) {
+        		$companyIds[] = $company_ids['company_id'];
+        	}
+        	$implode_companyId = implode(',',$companyIds);
+
+        	if(!empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+				$whereDate = "DATE(p.created_at) BETWEEN '".$searchByFromMinDate."' AND '".$searchByToMaxDate."' " ;
+			}else if(!empty($searchByFromMinDate) && empty($searchByToMaxDate)){
+				$whereDate = "DATE(p.created_at) >= '".$searchByFromMinDate."' " ;
+			}else if(empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+				$whereDate = "DATE(p.created_at) <= '".$searchByToMaxDate."' ";
+			}else{
+				$whereDate = '';
+			}
+
+        	$this->db->select("SQL_CALC_FOUND_ROWS p.product_img_1, CONCAT(UPPER(SUBSTRING(p.product_name,1,1)),LOWER(SUBSTRING(p.product_name,2))) as product_name,  p.selling_price_currency, p.product_selling_price, p.selling_price_currency , CONCAT(p.selling_price_currency,' ', p.product_selling_price) as product_price , date_format(p.created_at,'%d-%m-%y %h:%i:%s %p') as created_at, IF(p.status = '1','Active','Inactive') AS `status`,p.product_id,CASE WHEN p.approved_status = '1' THEN 'Approved' WHEN p.approved_status = '3' THEN 'Reject' ELSE 'Pending' END AS `approved_status`, p.vendor_id,p.product_mapped, p_s.total_score,v.vendor_catalog_url_slug,v.email,v.password,CONCAT(UPPER(SUBSTRING(v.company_name,1,1)),LOWER(SUBSTRING(v.company_name,2))) as company_name",FALSE);
+			$this->db->from('product p');
+			$this->db->join('vendor_info v' ,'v.id = p.vendor_id','left');
+			$this->db->join('vendor_product_score_table p_s' ,'p_s.product_id = p.product_id','left');
+			$this->db->join('product_assign_user p_assign', 'p_assign.product_id = p.product_id', 'left');
+			$this->db->where(array('p.status !='=>2,'p.approved_status'=>3));
+			$this->db->where('p_assign.product_id IS NULL');
+			
+			if(!empty($data)){
+				$this->db->where_in('p.vendor_id', $companyIds);
+			}
+			if(!empty($product_ids)){
+				$this->db->where_in('p.product_id', $product_ids);
+			}
+			if(!empty($whereDate)){
+				$this->db->where($whereDate);
+			}
+			if (!empty($search)) {
+	 			$this->db->group_start();
+	 			$this->db->like('p.product_name', $search, 'after');
+	 			$this->db->or_like('v.company_name', $search, 'both');
+	 			$this->db->group_end();
+			}
+			$this->db->group_by('p.product_id');
+			$this->db->order_by('p.product_id','DESC');
+			$this->db->limit($limit,$offset);
+			$query = $this->db->get();
+	        $countQuery 		 = $this->db->query('SELECT FOUND_ROWS() AS `Count`');
+	        $data['total_count'] = $countQuery->row()->Count;
+	        $data['fetch_count'] = $query->num_rows();
+	        $data['fetch_data']  = $query->result_array();
+	        return $data;
+        } else {
+        	if(!empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+				$whereDate = "DATE(p.created_at) BETWEEN '".$searchByFromMinDate."' AND '".$searchByToMaxDate."' " ;
+			}else if(!empty($searchByFromMinDate) && empty($searchByToMaxDate)){
+				$whereDate = "DATE(p.created_at) >= '".$searchByFromMinDate."' " ;
+			}else if(empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+				$whereDate = "DATE(p.created_at) <= '".$searchByToMaxDate."' ";
+			}else{
+				$whereDate = '';
+			}
+			$this->db->select("SQL_CALC_FOUND_ROWS p.product_img_1, CONCAT(UPPER(SUBSTRING(p.product_name,1,1)),LOWER(SUBSTRING(p.product_name,2))) as product_name,  p.selling_price_currency, p.product_selling_price, p.selling_price_currency , CONCAT(p.selling_price_currency,' ', p.product_selling_price) as product_price , date_format(p.created_at,'%d-%m-%y %h:%i:%s %p') as created_at, IF(p.status = '1','Active','Inactive') AS `status`,p.product_id,CASE WHEN p.approved_status = '1' THEN 'Approved' WHEN p.approved_status = '3' THEN 'Reject' ELSE 'Pending' END AS `approved_status`, p.vendor_id,p.product_mapped, p_s.total_score,v.vendor_catalog_url_slug,v.email,v.password,CONCAT(UPPER(SUBSTRING(v.company_name,1,1)),LOWER(SUBSTRING(v.company_name,2))) as company_name",FALSE);
+			$this->db->from('product p');
+			$this->db->join('vendor_info v' ,'v.id = p.vendor_id','left');
+			$this->db->join('vendor_product_score_table p_s' ,'p_s.product_id = p.product_id','left');
+			$this->db->join('product_assign_user p_assign', 'p_assign.product_id = p.product_id', 'left');
+			$this->db->where(array('p.status !='=>2,'p.approved_status'=>3));
+
+			if(!empty($whereDate)){
+				$this->db->where($whereDate);
+			}
+
+			if (!empty($search)) {
+	 			$this->db->group_start();
+	 			$this->db->like('p.product_name', $search, 'after');
+	 			$this->db->or_like('v.company_name', $search, 'both');
+	 			$this->db->group_end();
+			}
+			$this->db->group_by('p.product_id');
+			$this->db->order_by('p.product_id','DESC');
+			$this->db->limit($limit,$offset);
+			$query = $this->db->get();
+	        $countQuery 		 = $this->db->query('SELECT FOUND_ROWS() AS `Count`');
+	        $data['total_count'] = $countQuery->row()->Count;
+	        $data['fetch_count'] = $query->num_rows();
+	        $data['fetch_data']  = $query->result_array();
+	        return $data;
+	    }
+	}
+
+	public function fetchapprovedProduct($limit=10, $offset = 0,$search ='',$searchByFromMin='',$searchByToMax='',$searchByFromMinDate='',$searchByToMaxDate=''){
+		$this->db->select("c_per.company_id");
+		$this->db->from('company_permission_tbl c_per');
+		$this->db->where(array('c_per.admin_user_id' => $_SESSION['adminsessiondetails']['id'],'c_per.status'=>1));
+		$query = $this->db->get();
+        $data  = $query->result_array();
+
+        $this->db->select("p_assign.product_id,p_assign.user_id");
+		$this->db->from('product_assign_user p_assign');
+		$this->db->where(array('p_assign.user_id' => $_SESSION['adminsessiondetails']['id'],'p_assign.status'=>1));
+		$query   = $this->db->get();
+        $data_1  = $query->result_array();
+
+        if($_SESSION['adminsessiondetails']['id'] != 1){
+        	$companyIds   = []; $implode_companyId = [];$product_ids =[]; $implode_product_id = [];
+
+        	if(!empty($data_1)){
+        		foreach ($data_1 as $key => $ass_value) {
+        			$product_ids[] = $ass_value['product_id'];
+        		}
+        		$implode_product_id = implode(',',$product_ids);
+        	}
+
+        	foreach ($data as $key => $company_ids) {
+        		$companyIds[] = $company_ids['company_id'];
+        	}
+        	$implode_companyId = implode(',',$companyIds);
+
+        	if(!empty($searchByFromMin) && !empty($searchByToMax)) {
+			 $where = "p_s.total_score BETWEEN ".$searchByFromMin." AND ".$searchByToMax." " ;
+			}else if(!empty($searchByFromMin) && empty($searchByToMax)){
+				$where = "p_s.total_score >= ".$searchByFromMin." " ;
+			}else if(empty($searchByFromMin) && !empty($searchByToMax)) {
+				$where = "p_s.total_score <= ".$searchByFromMin." ";
+			}else{
+				 $where = '';
+			}
+
+			if(!empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+				$whereDate = "DATE(p.created_at) BETWEEN '".$searchByFromMinDate."' AND '".$searchByToMaxDate."' " ;
+			}else if(!empty($searchByFromMinDate) && empty($searchByToMaxDate)){
+				$whereDate = "DATE(p.created_at) >= '".$searchByFromMinDate."' " ;
+			}else if(empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+				$whereDate = "DATE(p.created_at) <= '".$searchByToMaxDate."' ";
+			}else{
+				$whereDate = '';
+			}
+
+			$this->db->select("SQL_CALC_FOUND_ROWS p.product_img_1, CONCAT(UPPER(SUBSTRING(p.product_name,1,1)),LOWER(SUBSTRING(p.product_name,2))) as product_name,  p.selling_price_currency, p.product_selling_price, p.selling_price_currency , CONCAT(p.selling_price_currency,' ', p.product_selling_price) as product_price , date_format(p.created_at,'%d-%m-%y %h:%i:%s %p') as created_at, IF(p.status = '1','Active','Inactive') AS `status`,p.product_id,CASE WHEN p.approved_status = '1' THEN 'Approved' WHEN p.approved_status = '3' THEN 'Reject' ELSE 'Pending' END AS `approved_status`, p.vendor_id,p.product_mapped, p_s.total_score,v.vendor_catalog_url_slug,v.email,v.password,CONCAT(UPPER(SUBSTRING(v.company_name,1,1)),LOWER(SUBSTRING(v.company_name,2))) as company_name",FALSE);
+			$this->db->from('product p');
+			$this->db->join('vendor_info v' ,'v.id = p.vendor_id','left');
+			$this->db->join('vendor_product_score_table p_s' ,'p_s.product_id = p.product_id','left');
+			$this->db->join('product_assign_user p_assign', 'p_assign.product_id = p.product_id', 'left');
+			$this->db->where(array('p.status !='=>2,'p.approved_status'=>1));
+			
+
+			if(!empty($data)){
+				$this->db->where_in('p.vendor_id', $companyIds);
+			}
+
+			if(!empty($product_ids)){
+				$this->db->where_in('p.product_id', $product_ids);
+			}else{
+				$this->db->where('p_assign.product_id IS NULL');
+			}
+
+			if(!empty($where)){
+				$this->db->where($where);
+			}
+			if(!empty($whereDate)){
+				$this->db->where($whereDate);
+			}
+			if (!empty($search)) {
+	 			$this->db->group_start();
+	 			$this->db->like('p.product_name', $search, 'after');
+	 			$this->db->or_like('v.company_name', $search, 'both');
+	 			$this->db->group_end();
+			}
+			$this->db->group_by('p.product_id');
+			$this->db->order_by('p.product_id','DESC');
+			$this->db->limit($limit,$offset);
+			$query = $this->db->get();
+	        $countQuery 		 = $this->db->query('SELECT FOUND_ROWS() AS `Count`');
+	        $data['total_count'] = $countQuery->row()->Count;
+	        $data['fetch_count'] = $query->num_rows();
+	        $data['fetch_data']  = $query->result_array();
+	        return $data;
+        } else {
+			if(!empty($searchByFromMin) && !empty($searchByToMax)) {
+				 $where = "p_s.total_score BETWEEN ".$searchByFromMin." AND ".$searchByToMax." " ;
+			}else if(!empty($searchByFromMin) && empty($searchByToMax)){
+				$where = "p_s.total_score >= ".$searchByFromMin." " ;
+			}else if(empty($searchByFromMin) && !empty($searchByToMax)) {
+				$where = "p_s.total_score <= ".$searchByFromMin." ";
+			}else{
+				 $where = '';
+			}
+
+			if(!empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+				$whereDate = "DATE(p.created_at) BETWEEN '".$searchByFromMinDate."' AND '".$searchByToMaxDate."' " ;
+			}else if(!empty($searchByFromMinDate) && empty($searchByToMaxDate)){
+				$whereDate = "DATE(p.created_at) >= '".$searchByFromMinDate."' " ;
+			}else if(empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+				$whereDate = "DATE(p.created_at) <= '".$searchByToMaxDate."' ";
+			}else{
+				$whereDate = '';
+			} 
+
+			$this->db->select("SQL_CALC_FOUND_ROWS p.product_img_1, CONCAT(UPPER(SUBSTRING(p.product_name,1,1)),LOWER(SUBSTRING(p.product_name,2))) as product_name,  p.selling_price_currency, p.product_selling_price, p.selling_price_currency , CONCAT(p.selling_price_currency,' ', p.product_selling_price) as product_price , date_format(p.created_at,'%d-%m-%y %h:%i:%s %p') as created_at, IF(p.status = '1','Active','Inactive') AS `status`,p.product_id,CASE WHEN p.approved_status = '1' THEN 'Approved' WHEN p.approved_status = '3' THEN 'Reject' ELSE 'Pending' END AS `approved_status`, p.vendor_id,p.product_mapped, p_s.total_score,v.vendor_catalog_url_slug,v.email,v.password,CONCAT(UPPER(SUBSTRING(v.company_name,1,1)),LOWER(SUBSTRING(v.company_name,2))) as company_name",FALSE);
+			$this->db->from('product p');
+			$this->db->join('vendor_info v' ,'v.id = p.vendor_id','left');
+			$this->db->join('vendor_product_score_table p_s' ,'p_s.product_id = p.product_id','left');
+			$this->db->where(array('p.status !='=>2,'p.approved_status'=>1));
+			if(!empty($where)){
+				$this->db->where($where);
+			}
+			if(!empty($whereDate)){
+				$this->db->where($whereDate);
+			}
+			if (!empty($search)) {
+	 			$this->db->group_start();
+	 			$this->db->like('p.product_name', $search, 'after');
+	 			$this->db->or_like('v.company_name', $search, 'both');
+	 			$this->db->group_end();
+			}
+			$this->db->group_by('p.product_id');
+			$this->db->order_by('p.product_id','DESC');
+			$this->db->limit($limit,$offset);
+			$query = $this->db->get();
+	        $countQuery 		 = $this->db->query('SELECT FOUND_ROWS() AS `Count`');
+	        $data['total_count'] = $countQuery->row()->Count;
+	        $data['fetch_count'] = $query->num_rows();
+	        $data['fetch_data']  = $query->result_array();
+	        return $data;
+	    }
+	}
+
+	public function fetchProductMappingInformation($limit=10, $offset = 0,$search ='',$searchByFromMinDate='',$searchByToMaxDate=''){
+
+		$this->db->select("c_per.company_id");
+		$this->db->from('company_permission_tbl c_per');
+		$this->db->where(array('c_per.admin_user_id' => $_SESSION['adminsessiondetails']['id'],'c_per.status'=>1));
+		$query = $this->db->get();
+        $data  = $query->result_array();
+
+		$this->db->select("p_assign.product_id,p_assign.user_id");
+		$this->db->from('product_assign_user p_assign');
+		$this->db->where(array('p_assign.user_id' => $_SESSION['adminsessiondetails']['id'],'p_assign.status'=>1));
+		$query   = $this->db->get();
+        $data_1  = $query->result_array();
+
+        if($_SESSION['adminsessiondetails']['id'] != 1){
+        	$product_ids =[]; $implode_product_id = [];
+        	if(!empty($data_1)){
+        		foreach ($data_1 as $key => $ass_value) {
+        			$product_ids[] = $ass_value['product_id'];
+        		}
+        		$implode_product_id = implode(',',$product_ids);
+        	}
+
+        	foreach ($data as $key => $company_ids) {
+        		$companyIds[] = $company_ids['company_id'];
+        	}
+        	$implode_companyId = implode(',',$companyIds);
+
+			if(!empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+				$whereDate = "DATE(p.created_at) BETWEEN '".$searchByFromMinDate."' AND '".$searchByToMaxDate."' " ;
+			}else if(!empty($searchByFromMinDate) && empty($searchByToMaxDate)){
+				$whereDate = "DATE(p.created_at) >= '".$searchByFromMinDate."' " ;
+			}else if(empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+				$whereDate = "DATE(p.created_at) <= '".$searchByToMaxDate."' ";
+			}else{
+				$whereDate = '';
+			}
+
+			$this->db->select("SQL_CALC_FOUND_ROWS p.product_img_1, CONCAT(UPPER(SUBSTRING(p.product_name,1,1)),LOWER(SUBSTRING(p.product_name,2))) as product_name, date_format(p.created_at,'%d-%m-%y %h:%i:%s %p') as created_at, IF(p.status = '1','Active','Inactive') AS `status`,p.product_id,CASE WHEN p.approved_status = '1' THEN 'Approved' WHEN p.approved_status = '3' THEN 'Reject' ELSE 'Pending' END AS `approved_status`, p.vendor_id,p.product_mapped, p_s.total_score, v.vendor_catalog_url_slug, v.email,v.password , CONCAT(UPPER(SUBSTRING(v.company_name,1,1)),LOWER(SUBSTRING(v.company_name,2))) as company_name",FALSE);
+			$this->db->from('product p');
+			$this->db->join('vendor_info v' ,'v.id = p.vendor_id','left');
+			$this->db->join('vendor_product_score_table p_s' ,'p_s.product_id = p.product_id','left');
+			$this->db->join('product_assign_user p_assign', 'p_assign.product_id = p.product_id', 'left');
+			
+			if(!empty($vendor_id)){
+				$this->db->where(array('p.status !='=>2,'p.product_mapped'=>1,'p.vendor_id'=>base64_decode($vendor_id)));
+			}else{
+				$this->db->where(array('p.status !='=>2,'p.product_mapped'=>1));
+			}
+			if(!empty($data)){
+				$this->db->where_in('p.vendor_id', $companyIds);
+			}
+
+			if(!empty($product_ids)){
+				$this->db->where_in('p.product_id', $product_ids);
+			}else{
+				$this->db->where('p_assign.product_id IS NULL');
+			}
+
+			if(!empty($whereDate)){
+				$this->db->where($whereDate);
+			}
+			if (!empty($search)) {
+	 			$this->db->group_start();
+	 			$this->db->like('p.product_name', $search, 'after');
+	 			$this->db->or_like('v.company_name', $search, 'both');
+	 			$this->db->group_end();
+			}
+			$this->db->group_by('p.product_id');
+			$this->db->order_by('p.product_id','DESC');
+			$this->db->limit($limit,$offset);
+			$query = $this->db->get();
+	      
+	        $countQuery 		 = $this->db->query('SELECT FOUND_ROWS() AS `Count`');
+	        $data['total_count'] = $countQuery->row()->Count;
+	        $data['fetch_count'] = $query->num_rows();
+	        $data['fetch_data']  = $query->result_array();
+	        if(!empty($data['fetch_data'])){
+	        	foreach ($data['fetch_data'] as $key => $value) {
+	        		$cat_elements 			= array();
+	        		$implode_categories 	= '';
+	        		$categories_name 		= '';
+
+	        		$this->db->select("v_p_m.autogorila_parent_cat_id, v_p_m.autogorila_sub_cat_id, v_p_m.autogorila_sub_cat_id, ac.category_name as p_cat_name,acs.category_name as sub_cat_name,acm.category_name as micro_cat_name, ac.id");
+	        		$this->db->from('vendor_product_mapping v_p_m');
+	        		$this->db->join('auto_category ac' ,'ac.id = v_p_m.autogorila_parent_cat_id','(ac.cat_level=1)','left');
+	        		$this->db->join('auto_category acs' ,'acs.id = v_p_m.autogorila_sub_cat_id','(acs.cat_level=2)','left');
+	        		$this->db->join('auto_category acm' ,'acm.id = v_p_m.autogorila_micro_cat_id','(acm.cat_level=3)','left');
+	        		$this->db->where(array('product_id'=>$value['product_id'],'v_p_m.status'=>1));
+	        		$query = $this->db->get();
+	        		$data['fetch_data'][$key]['pcat_ids']  = $query->result_array();
+
+	        		foreach ($data['fetch_data'][$key]['pcat_ids'] as $key1 => $pvalue) {
+	        			$micro_cat = '<span style="color:red;">'.$pvalue['micro_cat_name'].'</span>';
+	        			$sub_cat = '<span style="color:green;">'.$pvalue['sub_cat_name'].'</span>';
+	        			$cat_elements[] = html_entity_decode($pvalue['p_cat_name'].'<b> > </b>'.$sub_cat.'<b> > </b>'.$micro_cat);
+	        		}
+
+	        		$implode_categories = implode(', ',$cat_elements);
+
+	        		$data['fetch_data'][$key]['categories_name'] = !empty($implode_categories)?$implode_categories:'';
+		        	$data['fetch_data'][$key]['product_nm'] =  stripslashes($value['product_name']);
+
+		        	if(file_exists(VIEW_IMAGE_URL . 'product/' . $value['product_img_1'])){
+						$data['fetch_data'][$key]['product_img_1']= $value['product_img_1'];
+					}
+
+
+		        	/*** End Category Section ****/
+				}
+	        }
+	        
+	       return $data;
+	   } else {
+	   		if(!empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+				$whereDate = "DATE(p.created_at) BETWEEN '".$searchByFromMinDate."' AND '".$searchByToMaxDate."' " ;
+			}else if(!empty($searchByFromMinDate) && empty($searchByToMaxDate)){
+				$whereDate = "DATE(p.created_at) >= '".$searchByFromMinDate."' " ;
+			}else if(empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+				$whereDate = "DATE(p.created_at) <= '".$searchByToMaxDate."' ";
+			}else{
+				$whereDate = '';
+			}
+
+			$this->db->select("SQL_CALC_FOUND_ROWS p.product_img_1, CONCAT(UPPER(SUBSTRING(p.product_name,1,1)),LOWER(SUBSTRING(p.product_name,2))) as product_name, date_format(p.created_at,'%d-%m-%y %h:%i:%s %p') as created_at, IF(p.status = '1','Active','Inactive') AS `status`,p.product_id,CASE WHEN p.approved_status = '1' THEN 'Approved' WHEN p.approved_status = '3' THEN 'Reject' ELSE 'Pending' END AS `approved_status`, p.vendor_id,p.product_mapped, p_s.total_score, v.vendor_catalog_url_slug, v.email,v.password , CONCAT(UPPER(SUBSTRING(v.company_name,1,1)),LOWER(SUBSTRING(v.company_name,2))) as company_name",FALSE);
+			$this->db->from('product p');
+			$this->db->join('vendor_info v' ,'v.id = p.vendor_id','left');
+			$this->db->join('vendor_product_score_table p_s' ,'p_s.product_id = p.product_id','left');
+			if(!empty($vendor_id)){
+				$this->db->where(array('p.status !='=>2,'p.product_mapped'=>1,'p.vendor_id'=>base64_decode($vendor_id)));
+			}else{
+				$this->db->where(array('p.status !='=>2,'p.product_mapped'=>1));
+			}
+
+			if(!empty($whereDate)){
+				$this->db->where($whereDate);
+			}
+			if (!empty($search)) {
+	 			$this->db->group_start();
+	 			$this->db->like('p.product_name', $search, 'after');
+	 			$this->db->or_like('v.company_name', $search, 'both');
+	 			$this->db->group_end();
+			}
+			$this->db->group_by('p.product_id');
+			$this->db->order_by('p.product_id','DESC');
+			$this->db->limit($limit,$offset);
+			$query = $this->db->get();
+	      
+	        $countQuery 		 = $this->db->query('SELECT FOUND_ROWS() AS `Count`');
+	        $data['total_count'] = $countQuery->row()->Count;
+	        $data['fetch_count'] = $query->num_rows();
+	        $data['fetch_data']  = $query->result_array();
+	        if(!empty($data['fetch_data'])){
+	        	foreach ($data['fetch_data'] as $key => $value) {
+	        		$cat_elements 			= array();
+	        		$implode_categories 	= '';
+	        		$categories_name 		= '';
+
+	        		$this->db->select("v_p_m.autogorila_parent_cat_id, v_p_m.autogorila_sub_cat_id, v_p_m.autogorila_sub_cat_id, ac.category_name as p_cat_name,acs.category_name as sub_cat_name,acm.category_name as micro_cat_name, ac.id");
+	        		$this->db->from('vendor_product_mapping v_p_m');
+	        		$this->db->join('auto_category ac' ,'ac.id = v_p_m.autogorila_parent_cat_id','(ac.cat_level=1)','left');
+	        		$this->db->join('auto_category acs' ,'acs.id = v_p_m.autogorila_sub_cat_id','(acs.cat_level=2)','left');
+	        		$this->db->join('auto_category acm' ,'acm.id = v_p_m.autogorila_micro_cat_id','(acm.cat_level=3)','left');
+	        		$this->db->where(array('product_id'=>$value['product_id'],'v_p_m.status'=>1));
+	        		$query = $this->db->get();
+	        		$data['fetch_data'][$key]['pcat_ids']  = $query->result_array();
+
+	        		foreach ($data['fetch_data'][$key]['pcat_ids'] as $key1 => $pvalue) {
+	        			$micro_cat = '<span style="color:red;">'.$pvalue['micro_cat_name'].'</span>';
+	        			$sub_cat = '<span style="color:green;">'.$pvalue['sub_cat_name'].'</span>';
+	        			$cat_elements[] = html_entity_decode($pvalue['p_cat_name'].'<b> > </b>'.$sub_cat.'<b> > </b>'.$micro_cat);
+	        		}
+
+	        		$implode_categories = implode(', ',$cat_elements);
+
+	        		$data['fetch_data'][$key]['categories_name'] = !empty($implode_categories)?$implode_categories:'';
+		        	$data['fetch_data'][$key]['product_nm'] =  stripslashes($value['product_name']);
+
+		        	if(file_exists(VIEW_IMAGE_URL . 'product/' . $value['product_img_1'])){
+						$data['fetch_data'][$key]['product_img_1']= $value['product_img_1'];
+					}
+
+
+		        	/*** End Category Section ****/
+				}
+	        }
+	        
+	       return $data;
+	   }
+	}
+
+
+	public function getUnMappingProductList($limit=10, $offset = 0,$search ='',$searchByFromMinDate='',$searchByToMaxDate=''){
+		
+
+	    if(!empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+			$whereDate = "DATE(p.created_at) BETWEEN '".$searchByFromMinDate."' AND '".$searchByToMaxDate."' " ;
+		}else if(!empty($searchByFromMinDate) && empty($searchByToMaxDate)){
+			$whereDate = "DATE(p.created_at) >= '".$searchByFromMinDate."' " ;
+		}else if(empty($searchByFromMinDate) && !empty($searchByToMaxDate)) {
+			$whereDate = "DATE(p.created_at) <= '".$searchByToMaxDate."' ";
+		}else{
+			$whereDate = '';
+		}
+		$this->db->select("SQL_CALC_FOUND_ROWS p.product_img_1, CONCAT(UPPER(SUBSTRING(p.product_name,1,1)),LOWER(SUBSTRING(p.product_name,2))) as product_name, date_format(p.created_at,'%d-%m-%y %h:%i:%s %p') as created_at, IF(p.status = '1','Active','Inactive') AS `status`,p.product_id,CASE WHEN p.approved_status = '1' THEN 'Approved' WHEN p.approved_status = '3' THEN 'Reject' ELSE 'Pending' END AS `approved_status`, p.vendor_id,p.product_mapped, p_s.total_score, v.vendor_catalog_url_slug, v.email,v.password , CONCAT(UPPER(SUBSTRING(v.company_name,1,1)),LOWER(SUBSTRING(v.company_name,2))) as company_name",FALSE);
+		$this->db->from('product p');
+		$this->db->join('vendor_info v' ,'v.id = p.vendor_id','left');
+		$this->db->join('vendor_product_score_table p_s' ,'p_s.product_id = p.product_id','left');
+		if(!empty($vendor_id)){
+			$this->db->where(array('p.status !='=>2,'p.product_mapped'=>0,'p.vendor_id'=>base64_decode($vendor_id)));
+		}else{
+			$this->db->where(array('p.status !='=>2,'p.product_mapped'=>0));
+		}
+		if(!empty($whereDate)){
+			$this->db->where($whereDate);
+		}
+		
+		if (!empty($search)) {
+ 			$this->db->group_start();
+ 			$this->db->like('p.product_name', $search, 'after');
+ 			$this->db->or_like('v.company_name', $search, 'both');
+ 			$this->db->group_end();
+		}
+		$this->db->group_by('p.product_id');
+		$this->db->order_by('p.product_id','DESC');
+		$this->db->limit($limit,$offset);
+		$query = $this->db->get();
+      
+        $countQuery 		 = $this->db->query('SELECT FOUND_ROWS() AS `Count`');
+        $data['total_count'] = $countQuery->row()->Count;
+        $data['fetch_count'] = $query->num_rows();
+        $data['fetch_data']  = $query->result_array();
+        
+       return $data;
+	}
+
+	public function checkIsProductCodeExist($product_code){
+		$this->db->select("product_code");
+		$this->db->from('product');
+		$this->db->where(array('product_code' => $product_code));
+		$query = $this->db->get();
+		$data  = $query->num_rows();
+        return $data;
+	}
+	public function uploadData($table, $post_data=array()){
+        $this->db->insert_batch($table,$post_data);
+		$insertId = $this->db->insert_id();
+		return $insertId;
+    }
+
+    public function getLastCsvRecord($uniq_code){
+        $this->db->select("product_id,uniq_code,product_name,product_selling_price,vendor_id,product_description");
+		$this->db->from('product');
+		$this->db->where(array('uniq_code' => $uniq_code));
+		$query = $this->db->get();
+		$result= $query->result_array();
+        return $result;
+    }
+
+    public function getFailedCsvInfo($uniq_code){
+    	$this->db->select("p.product_id");
+		$this->db->from('product_rejeted_datalog p');
+		$this->db->where(array('p.uniq_code' => base64_decode($uniq_code)));
+		$query = $this->db->get();
+		$data  = $query->num_rows();
+        return $data;
+    }
+
+    public function getSuccessCsvInfo($uniq_code){
+    	$this->db->select("p.product_id");
+		$this->db->from('product p');
+		$this->db->where(array('p.uniq_code' => base64_decode($uniq_code)));
+		$query = $this->db->get();
+		$data  = $query->num_rows();
+        return $data;
+    }
+
+    public function getRejectedProductReport($limit=10, $offset = 0,$search ='',$uniq_code=''){
+        $this->db->select("SQL_CALC_FOUND_ROWS p.csv_row_no,p.product_name,v.company_name,p.created_at,p.rejected_reason",FALSE);
+		$this->db->from('product_rejeted_datalog p');
+		$this->db->join('vendor_info v' ,'v.id = p.vendor_id','left');
+		$this->db->where(array('p.uniq_code' => base64_decode($uniq_code)));
+		
+		if (!empty($search)) {
+ 			$this->db->group_start();
+ 			$this->db->like('p.product_name', $search, 'after');
+ 			$this->db->or_like('v.company_name', $search, 'both');
+ 			$this->db->group_end();
+		}
+		$this->db->order_by('p.product_id','DESC');
+		$this->db->limit($limit,$offset);
+		$query = $this->db->get();
+        $countQuery 		 = $this->db->query('SELECT FOUND_ROWS() AS `Count`');
+        $data['total_count'] = $countQuery->row()->Count;
+        $data['fetch_count'] = $query->num_rows();
+        $data['fetch_data']  = $query->result_array();
+        return $data;
+    }
+
+    public function exportSuccessProductCsv($uniq_code){
+    	$this->db->select("p.product_id,p.product_name,v.company_name");
+		$this->db->from('product p');
+		$this->db->join('vendor_info v' ,'v.id = p.vendor_id','left');
+		$this->db->where(array('p.uniq_code' => base64_decode($uniq_code)));
+		$query = $this->db->get();
+		$result= $query->result_array();
+        return $result;
+    }
+
+    public function checkIsProductSpecificationExist($product_id){
+    	$this->db->select("sp.id");
+		$this->db->from('product_specification_tbl sp');
+		$this->db->where(array('sp.product_id' => $product_id));
+		$query = $this->db->get();
+		$data  = $query->result_array();
+		return $data;
+    }
+
+    public function getLastProductSpecificationRecord($uniq_code){
+    	$this->db->select("sp.id,sp.product_id");
+		$this->db->from('product_specification_tbl sp');
+		$this->db->where(array('sp.uniq_code' => $uniq_code));
+		$this->db->group_by('sp.product_id');
+		$query = $this->db->get();
+		$data  = $query->result_array();
+		return $data;
+    }
+
+    public function getScoreDetails($product_id){
+    	$this->db->select("*");
+		$this->db->from('vendor_product_score_table');
+		$this->db->where(array('product_id' => $product_id));
+		$this->db->group_by('product_id');
+		$query = $this->db->get();
+		$data  = $query->result_array();
+		return $data;
+    }
+
+    public function getLastMappingRecord($uniq_code){
+    	$this->db->select("product_id");
+		$this->db->from('vendor_product_mapping');
+		$this->db->where(array('uniq_code' => $uniq_code));
+		$this->db->group_by('product_id');
+		$query = $this->db->get();
+		$data  = $query->result_array();
+		return $data;
+    }
+
+    public function exportAllProductDetails(){
+		$this->db->select("p.product_id , CONCAT(UPPER(SUBSTRING(p.product_name,1,1)),LOWER(SUBSTRING(p.product_name,2))) as product_name, CONCAT(UPPER(SUBSTRING(v.company_name,1,1)),LOWER(SUBSTRING(v.company_name,2))) as company_name, p_s.total_score,p.created_at");
+		$this->db->from('product p');
+		$this->db->join('vendor_info v' ,'v.id = p.vendor_id','left');
+		$this->db->join('vendor_product_score_table p_s' ,'p_s.product_id = p.product_id','left');
+		$this->db->where(array('p.status !='=>2));
+		$this->db->group_by('p.product_id');
+		$this->db->order_by('p.product_id','DESC');
+		$query = $this->db->get();
+        $data  = $query->result_array();
+        return $data;
+	}
+
+	public function exportApprovedProductDetails(){
+		$this->db->select("p.product_id , CONCAT(UPPER(SUBSTRING(p.product_name,1,1)),LOWER(SUBSTRING(p.product_name,2))) as product_name, CONCAT(UPPER(SUBSTRING(v.company_name,1,1)),LOWER(SUBSTRING(v.company_name,2))) as company_name, p_s.total_score,p.created_at");
+		$this->db->from('product p');
+		$this->db->join('vendor_info v' ,'v.id = p.vendor_id','left');
+		$this->db->join('vendor_product_score_table p_s' ,'p_s.product_id = p.product_id','left');
+		$this->db->where(array('p.status !='=>2,'p.approved_status'=>1));
+		$this->db->group_by('p.product_id');
+		$this->db->order_by('p.product_id','DESC');
+		$query = $this->db->get();
+        $data  = $query->result_array();
+        return $data;
+	}
+
+	public function exportRejectProductDetails($uniq_code){
+		$this->db->select("p.csv_row_no , CONCAT(UPPER(SUBSTRING(p.product_name,1,1)),LOWER(SUBSTRING(p.product_name,2))) as product_name, CONCAT(UPPER(SUBSTRING(v.company_name,1,1)),LOWER(SUBSTRING(v.company_name,2))) as company_name, p.created_at");
+		$this->db->from('product_rejeted_datalog p');
+		$this->db->join('vendor_info v' ,'v.id = p.vendor_id','left');
+		$this->db->where(array('p.uniq_code'=>base64_decode($uniq_code)));
+		$this->db->group_by('p.product_id');
+		$this->db->order_by('p.product_id','DESC');
+		$query = $this->db->get();
+        $data  = $query->result_array();
+        return $data;
+	}
+
+	public function countActiveProducts(){
+		$this->db->select("p.product_id");
+		$this->db->from('product p');
+		$this->db->where(array('p.status'=>1,'p.approved_status'=>1));
+		$this->db->group_by('p.product_id');
+		$query = $this->db->get();
+        $data  = $query->num_rows();
+        return $data;
+	}
+
+	public function siteMapforProduct(){
+		$this->db->select("p.product_id,p.product_name,p.product_url_slug");
+		$this->db->from('product p');
+		$this->db->where(array('p.status'=>1,'p.approved_status'=>1));
+		$this->db->group_by('p.product_id');
+		$query = $this->db->get();
+        $data  = $query->result();
+        return $data;
+	}
+
+	
+	
+	public function deleteProduct($data){
+		// $sql   = "DELETE FROM product WHERE product_id = ?";
+		// $query = $this->db->query($sql, array(base64_decode($data['product_id'])));
+		// return $this->db->affected_rows();
+
+		$this->db->delete('product', array('product_id' => base64_decode($data['product_id']))); 
+		$this->db->delete('vendor_product_mapping', array('product_id' => base64_decode($data['product_id'])));
+		$this->db->delete('product_specification_tbl', array('product_id' => base64_decode($data['product_id'])));
+		$this->db->delete('vendor_product_score_table', array('product_id' => base64_decode($data['product_id'])));
+		return 1;
+	}
+	
+	public function hardDelete($table,$condition=array()){
+		$this->db->where($condition);
+    	$this->db->delete($table);
+	}
+
+	public function insert($table, $post_data=array()){
+		$this->db->insert($table,$post_data);
+		$insertId = $this->db->insert_id();
+		return $insertId;
+	}
+	public function fetchProductDetailsById($pid){
+		$this->db->select("p.product_id,p.product_name,p.product_url_slug");
+		$this->db->from('product p');
+		$this->db->where(array('p.product_id'=>base64_decode($pid),'p.status'=>1,'p.approved_status'=>1));
+		$query = $this->db->get();
+        $data  = $query->result_array();
+        return $data;
+	}
+}
+
+/* End of file ProductModel.php */

@@ -1,0 +1,90 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+class UserModel extends CI_Model {
+
+	public function getAllUsers($type = 'active', $limit = 10, $offset = 0) {
+		
+		$userStatus = ($type == 'active')?'A':'I';
+
+		$this->db->select("SQL_CALC_FOUND_ROWS ud.fullName, ud.email, ud.gender, ud.dateOfBirth, ud.userMobileNo, ud.createdDateTime, ud.address, ud.id",FALSE);
+		$this->db->from('credit_user ud');
+		$this->db->where(array('ud.status'=>$userStatus));
+		$this->db->order_by('ud.id','DESC');
+		$this->db->limit($limit,$offset);
+		$query = $this->db->get();
+
+        $countQuery = $this->db->query('SELECT FOUND_ROWS() AS `Count`');
+        $data['total_count'] = $countQuery->row()->Count;
+        $data['fetch_count'] = $query->num_rows();
+        $data['fetch_data'] = $query->result_array();
+        return $data;
+	}
+
+	public function deleteUser($data) {
+
+		$this->db->set('status', 'D');
+		$this->db->where('id', base64_decode($data['user_id']));
+		$res = $this->db->update('credit_user');
+		return $this->db->affected_rows();
+	}
+
+	public function getUserDetailsById($id,$status = '') {
+
+		$status = (empty($status))?'A':'I';
+		$this->db->select("SQL_CALC_FOUND_ROWS ud.fullName, ud.email, ud.gender, ud.dateOfBirth, ud.userMobileNo, ud.createdDateTime, ud.address",FALSE);
+		$this->db->from('credit_user ud');
+		$this->db->where(array('ud.status'=>$status, 'id'=>base64_decode($id)));
+		$query = $this->db->get();
+		$data = $query->result_array();
+		return $data;
+	}
+
+	public function updateUserDetails($data,$id) {
+
+		$this->db->set($data);
+		$this->db->where('id', base64_decode($id));
+		$res = $this->db->update('credit_user');
+		return $this->db->affected_rows();
+	}
+
+	public function update($table = '', $updateArr = array() ,$condition = array()) {
+		if(empty($table) || empty($updateArr) || empty($condition)) {
+			return false;
+		}
+		$update = $this->db->update($table,$updateArr,$condition);
+		return $update;
+	}
+
+	public function getAllUserDocument($limit,$offset) {
+		$this->db->select("SQL_CALC_FOUND_ROWS cud.*, cu.fullName ",FALSE);
+		$this->db->from('credit_user_document cud');
+		$this->db->join('credit_user cu','cu.userId = cud.userId','left');
+		$this->db->where(array('cu.status!='=>'D'));
+		$this->db->order_by('cud.id','DESC');
+		$this->db->limit($limit,$offset);
+		$query = $this->db->get();
+
+        $countQuery = $this->db->query('SELECT FOUND_ROWS() AS `Count`');
+        $data['total_count'] = $countQuery->row()->Count;
+        $data['fetch_count'] = $query->num_rows();
+        $data['fetch_data']  = $query->result_array();
+        return $data;
+	}
+
+	public function getAllKycDetails($id) {
+
+		$this->db->select("cud.*, cu.fullName, cub.accountNo, cub.ifscCode");
+		$this->db->from('credit_user_document cud');
+		$this->db->join('credit_user cu','cu.userId = cud.userId','left');
+		$this->db->join('credit_user_bank_details cub','cub.userId = cud.userId','left');
+		$this->db->where(array('cu.status!='=>'D', 'cu.userId'=> base64_decode($id)));
+		$this->db->order_by('cud.id','DESC');
+		$query = $this->db->get();
+		$res = $query->result_array();
+        return $res;
+	}
+}
+
+/* End of file UserModel.php */
+/* Location: ./application/models/UserModel.php */

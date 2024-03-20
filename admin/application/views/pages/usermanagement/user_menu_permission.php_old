@@ -1,0 +1,104 @@
+<div class="content-wrapper">
+   <!-- Content Header (Page header) -->
+   <section class="content-header">
+      <h1>
+         User Management
+      </h1>
+      <ol class="breadcrumb">
+         <li><a href="<?php echo base_url('dashboard') ?>"><i class="fa fa-dashboard"></i>Home</a></li>
+         <li class="active">User Management</li>
+      </ol>
+   </section>
+   <!-- Main content -->
+   <section class="content">
+      <div class="row">
+         <!-- left column -->
+         <div class="col-md-12">
+            <!-- general form elements -->
+            <div class="box box-primary">
+               <div class="box-header with-border">
+                  <h3 class="box-title">User Management</h3>
+               </div>
+               <?php echo form_open_multipart('state/addState',array('role'=>'form')); ?>
+               <div class="box-body">
+                     <div class="form-group">
+                        <label for="">Users <span class="text-danger">*</span></label>
+                        <select name="country_id" class="form-control select2" required="required">
+                           <?php if(!empty($vendor_list)){ ?>
+                              <option value="">--Select Users--</option>
+                              <?php foreach ($vendor_list as $key => $v_value){ ?>
+                                 <option value="<?php echo $v_value['id']; ?>"><?php echo $v_value['name']; ?></option>
+                              <?php } ?>
+                           <?php } else { ?>
+                              <option value="">No Record Found</option>
+                           <?php } ?>   
+                       </select>
+                     </div>
+                 
+                  <?php $getParentMenu = fetchParentMenu(); ?>
+                     <div class="form-group">
+                        
+                           <div class= "col-md-12">
+                              <label class="tree-title">Menu Permissison </label> 
+                              <div class="row tree-menu-management">
+                              <?php if(!empty($getParentMenu)) { 
+                                 foreach ($getParentMenu as $key => $p_value) { ?>
+                                    <div class= "col-md-6 mb-25px">
+                                       <ul class="tree-ul">
+                                          <li>
+                                             <div class="link-holder">
+                                                <input type="checkbox" id="parent_<?php echo $p_value['id']; ?>" name="<?php echo $p_value['menu_name']; ?>" value="<?php echo $p_value['id']; ?>">
+                                                <label> <?php echo $p_value['menu_name']; ?></label>
+                                             </div>
+                                             <ul>
+                                                <li>
+                                                   <div>
+                                                      <input type="checkbox" id="parent_<?php echo $p_value['id']; ?>" name="<?php echo $p_value['menu_name']; ?>" value="<?php echo $p_value['id']; ?>">
+                                                      <label>Home Banner</label>
+                                                   </div>
+                                                   <ul>
+                                                      <li>
+                                                         <div>
+                                                            <input type="checkbox" id="parent_<?php echo $p_value['id']; ?>" name="<?php echo $p_value['menu_name']; ?>" value="<?php echo $p_value['id']; ?>">
+                                                            <label>Add Banner</label>
+                                                         </div>
+                                                      </li>
+                                                      <li>
+                                                         <div>
+                                                            <input type="checkbox" id="parent_<?php echo $p_value['id']; ?>" name="<?php echo $p_value['menu_name']; ?>" value="<?php echo $p_value['id']; ?>">
+                                                            <label>View Banner</label>
+                                                         </div>
+                                                      </li>
+                                                   </ul>
+                                                </li>
+                                             </ul>
+                                          </li>
+                                       </ul>
+                                       
+
+                                    </div>
+                              <?php }  } ?>
+                           </div>
+                        </div>
+                     </div>
+                  <!-- /.box-body -->
+                  <div class="box-footer">
+                     <button type="submit" name="submit" class="btn btn-primary">Submit</button>
+                  </div>
+                  <?php echo form_close(); ?>
+               </div>
+            </div>
+         </div>
+      </section>
+   </div>
+
+
+<script type="text/javascript">
+   $(document).ready(function () {
+      $('.tree-ul input[type="checkbox"]').change(function() {
+         //$('#textbox1').val($(this).is(':checked'));
+         var ul = $('.left-prduct-slider-nav').closest('ul');
+         $(this).parent().parent().find('ul:nth-child(1)').addClass('show');
+      });
+   });
+</script>

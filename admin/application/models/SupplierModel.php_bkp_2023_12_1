@@ -1,0 +1,146 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+class SupplierModel extends CI_Model {
+
+	public function getVendorDetails($limit = 10, $offset = 0, $search=''){
+		$this->db->select("SQL_CALC_FOUND_ROWS v.name, v.vendor_catalog_url_slug, v.company_name, v.email, v.created_at, IF(v.status = 'A','Active','Inactive') AS `status`,v.id,CASE WHEN v.approved_status = '1' THEN 'Approved' WHEN v.approved_status = '2' THEN 'Reject' ELSE 'Not Approved' END AS `approved_status`, v.password, v.featured_company, v.decript_password,round(AVG(coalesce(v_sc.total_score,0))) as cat_avscore,group_concat(distinct(se_pack.service_plan)) as service_plan ",FALSE);
+		$this->db->from('vendor_info v');
+		$this->db->join('vendor_product_score_table v_sc','v_sc.vendor_id=v.id','left');
+		$this->db->join('vendor_service_package_list v_service_p','(v_service_p.vendor_id = v.id AND v_service_p.status = "A")','left');
+		$this->db->join('service_package se_pack','se_pack.id = v_service_p.service_package_id','left');
+		$this->db->where(array('v.status !='=>'D'));
+		if (!empty($search)) {
+ 			
+ 			if($search == 'Approved' || $search == 'approved'){
+				$this->db->like('v.approved_status', 1, 'both');
+ 			}else if($search == 'Not Approved' || $search == 'not approved' || $search == 'not'){
+ 				$this->db->like('v.approved_status', 0, 'both');
+ 			} else {
+ 				$this->db->like('v.email', $search, 'both');
+ 				$this->db->or_like('v.company_name', $search, 'both');
+ 			}
+		}
+		$this->db->group_by('v.id');
+		$this->db->order_by('v.id','DESC');
+		$this->db->limit($limit,$offset);
+		$query = $this->db->get();
+	
+        $countQuery 		 = $this->db->query('SELECT FOUND_ROWS() AS `Count`');
+        $data['total_count'] = $countQuery->row()->Count;
+        $data['fetch_count'] = $query->num_rows();
+        $data['fetch_data']  = $query->result_array();
+        return $data;
+	}
+
+	public function getapprovedVendorDetails($limit = 10, $offset = 0, $search=''){
+		$this->db->select("SQL_CALC_FOUND_ROWS v.name, v.vendor_catalog_url_slug, v.company_name, v.email, v.created_at, IF(v.status = 'A','Active','Inactive') AS `status`, v.featured_company, v.id,IF(v.approved_status = '1','Approved','Not Approved') AS `approved_status`,v.password,v.decript_password",FALSE);
+		$this->db->from('vendor_info v');
+		$this->db->where(array('v.status !='=>'D' ,'v.approved_status'=>1 ,'v.type'=>2));
+		if (!empty($search)) {
+ 			$this->db->like('v.email', $search, 'both');
+ 			$this->db->or_like('v.company_name', $search, 'both');
+		}
+		$this->db->order_by('v.id','DESC');
+		$this->db->limit($limit,$offset);
+		$query = $this->db->get();
+	
+        $countQuery 		 = $this->db->query('SELECT FOUND_ROWS() AS `Count`');
+        $data['total_count'] = $countQuery->row()->Count;
+        $data['fetch_count'] = $query->num_rows();
+        $data['fetch_data']  = $query->result_array();
+        return $data;
+	}
+	
+	public function getRejectVendorDetails($limit = 10, $offset = 0, $search=''){
+		$this->db->select("SQL_CALC_FOUND_ROWS v.name, v.vendor_catalog_url_slug, v.company_name, v.email, v.created_at, IF(v.status = 'A','Active','Inactive') AS `status`, v.featured_company, v.id,IF(v.approved_status = '1','Approved','Not Approved') AS `approved_status`,v.password,v.decript_password",FALSE);
+		$this->db->from('vendor_info v');
+		$this->db->where(array('v.status !='=>'D' ,'v.approved_status'=>2));
+		if (!empty($search)) {
+ 			$this->db->like('v.email', $search, 'both');
+ 			$this->db->or_like('v.company_name', $search, 'both');
+		}
+		$this->db->order_by('v.id','DESC');
+		$this->db->limit($limit,$offset);
+		$query = $this->db->get();
+	
+        $countQuery 		 = $this->db->query('SELECT FOUND_ROWS() AS `Count`');
+        $data['total_count'] = $countQuery->row()->Count;
+        $data['fetch_count'] = $query->num_rows();
+        $data['fetch_data']  = $query->result_array();
+        return $data;
+	}
+
+	public function changeStatus($data) {
+		$sql = "UPDATE vendor_info SET status = ( CASE WHEN STATUS = 'A' THEN 'I' ELSE 'A' END ) WHERE id = ?";
+		$query = $this->db->query($sql, array(base64_decode($data['vendor_id'])));
+		return $query;
+	}
+
+	public function changeApprovedStatus($data){
+		$sql = "UPDATE vendor_info SET approved_status = ( CASE WHEN APPROVED_STATUS = '1' THEN '0' ELSE '1' END ) WHERE id = ?";
+		$query = $this->db->query($sql, array(base64_decode($data['vendor_id'])));
+		return $query;
+	}
+
+	public function deleteVendor($data){
+		$sql = "UPDATE vendor_info SET status ='D' WHERE id = ?";
+		$query = $this->db->query($sql, array(base64_decode($data['vendor_id'])));
+		return $query;
+	}
+
+	public function rejectStatus($data){
+		$sql = "UPDATE vendor_info SET approved_status = 2 WHERE id = ?";
+		$query = $this->db->query($sql, array(base64_decode($data['vendor_id'])));
+		return $query;
+	}
+
+	public function getpendingVendorDetails($limit = 10, $offset = 0, $search=''){
+		$this->db->select("SQL_CALC_FOUND_ROWS v.name, v.vendor_catalog_url_slug, v.company_name, v.email, v.created_at, IF(v.status = 'A','Active','Inactive') AS `status`,v.id,CASE WHEN v.approved_status = '1' THEN 'Approved' WHEN v.approved_status = '2' THEN 'Reject' ELSE 'Not Approved' END AS `approved_status`, v.password, v.featured_company, v.decript_password,round(AVG(coalesce(v_sc.total_score,0))) as cat_avscore,group_concat(distinct(se_pack.service_plan)) as service_plan ",FALSE);
+		$this->db->from('vendor_info v');
+		$this->db->join('vendor_product_score_table v_sc','v_sc.vendor_id=v.id','left');
+		$this->db->join('vendor_service_package_list v_service_p','(v_service_p.vendor_id = v.id AND v_service_p.status = "A")','left');
+		$this->db->join('service_package se_pack','se_pack.id = v_service_p.service_package_id','left');
+		//$this->db->where(array('v.status !='=>'D'));
+		$this->db->where(array('v.status !='=>'D' ,'v.approved_status'=>0 ));
+		if (!empty($search)) {
+ 			
+ 			if($search == 'Approved' || $search == 'approved'){
+				$this->db->like('v.approved_status', 1, 'both');
+ 			}else if($search == 'Not Approved' || $search == 'not approved' || $search == 'not'){
+ 				$this->db->like('v.approved_status', 0, 'both');
+ 			} else {
+ 				$this->db->like('v.email', $search, 'both');
+ 				$this->db->or_like('v.company_name', $search, 'both');
+ 			}
+		}
+		$this->db->group_by('v.id');
+		$this->db->order_by('v.id','DESC');
+		$this->db->limit($limit,$offset);
+		$query = $this->db->get();
+	
+        $countQuery 		 = $this->db->query('SELECT FOUND_ROWS() AS `Count`');
+        $data['total_count'] = $countQuery->row()->Count;
+        $data['fetch_count'] = $query->num_rows();
+        $data['fetch_data']  = $query->result_array();
+        return $data;
+	}
+	
+	public function profileCheckBy($data){
+		$profile_check = $data['profile_check'];
+		$sql = "UPDATE vendor_info SET profile_check_by = '".$profile_check."' WHERE id = ?";
+		$query = $this->db->query($sql, array($data['id']));
+		return $query;
+	}
+
+	public function changefeatureStatus($data){
+		$sql = "UPDATE vendor_info SET featured_company = ( CASE WHEN featured_company = '0' THEN 1 ELSE 0 END ) WHERE id = ?";
+		$query = $this->db->query($sql, array(base64_decode($data['vendor_id'])));
+		return $query;
+	}
+
+
+}
+
+/* End of file SupplierModel.php */
+/* Location: ./application/models/SupplierModel.php */
