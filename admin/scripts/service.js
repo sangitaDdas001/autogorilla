@@ -1,0 +1,72 @@
+function ajaxCallJson(postData,apiurl,successCb,errorCb) {
+	$.ajax({
+		type: 'POST',
+		dataType: 'json',
+		// context:this,
+		url: apiurl,
+		data: postData,
+		success: successCb,
+		error: errorCb
+	});
+}
+
+$('#service_plan_details').on('click','.edit_info',function(e){
+	let row 				= $($(this)).closest('tr'); 
+    let data 				= $("#service_plan_details").dataTable().fnGetData(row);
+	window.location.href 	= localurl+"service/editServicePlan/"+btoa(data.id);
+});
+
+$('#service_plan_details').on('click','.change_service_status ',function(e){
+	let row = $($(this)).closest('tr');
+    let data = $("#service_plan_details").dataTable().fnGetData(row);
+    let url = localurl+"service/ChangeStatus";
+	let postData = {"id":btoa(data.id),'status':data.status};
+	let successCb = function(response) {
+		if(response != '') {
+			if(response.status) {
+				window.location.href=localurl+"service/servicePlan";
+			} else {
+				alert(response.message);
+			}
+		}
+		window.location.href=localurl+"service/servicePlan";
+	};
+	let errorCb = function(error) {
+		alert("Something went wrong. Please try again later");
+	};
+
+	if(confirm('Are you sure, you want to change status')) {
+    	ajaxCallJson(postData,url,successCb,errorCb);
+    } else {
+    	return false;
+    }
+});
+
+/*	Delete category details	*/
+$('#service_plan_details').on('click','.delete_info',function(e){
+	let row = $($(this)).closest('tr');
+    let data = $("#service_plan_details").dataTable().fnGetData(row);
+    let url = localurl+"service/servicePlanDelete";
+	let postData = {"id":btoa(data.id)};
+	let successCb = function(response) {
+		if(response != '') {
+			if(response.status) {
+				window.location.href = localurl+"service/servicePlan";
+			} else {
+				alert(response.message);
+			}
+		}
+		window.location.href = localurl+"service/servicePlan";
+	};
+	let errorCb = function(error) {
+		alert("Something went wrong. Please try again later");
+	};
+
+	if(confirm('Are you sure, you want to delete details?')) {
+    	ajaxCallJson(postData,url,successCb,errorCb);
+    } else {
+    	return false;
+    }
+});
+
+
